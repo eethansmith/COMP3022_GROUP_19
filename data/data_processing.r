@@ -16,14 +16,18 @@ df <- df %>%
   select(
     date,
     timestamp,
+    location,
     sewer_and_water,
     power,
     roads_and_bridges,
     medical,
     buildings,
     shake_intensity,
-    location
   )
 
-# Save the processed data to CSV
+# Sort dataset by location, then date, then timestamp
+df <- df %>%
+  arrange(location, date, timestamp)
+
+# Save the processed and sorted data to CSV
 write.csv(df, "data/resources/mc1-report-data-processed.csv", row.names = FALSE)
