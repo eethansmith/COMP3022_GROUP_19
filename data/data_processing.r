@@ -26,4 +26,4 @@ df <- df %>%
   )
 
 # Save the processed data to CSV
-write.csv(df, "data/resources/mc1-report-data-processed.csv", row.names = FALSE, na = "")
+write.csv(df, "data/resources/mc1-report-data-processed.csv", row.names = FALSE)
