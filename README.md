@@ -42,8 +42,9 @@ Bar Charts for Comparison - 'Building' Category first, then option to swap categ
 Use map for showing which area is hardest hit and colour code it to show severity
 - If a user clicks on the area use the circular scale to show why it is at the current severity
 
-  Can use button system to change category for different types of emergency response teams. i.e if the medical facilities are not damaged highly in one area it might not be necessary to be to send an emergency medical team to the area. 
+  Can use button system to change category for different types of emergency response teams. i.e if the medical facilities are not damaged highly in one area it might not be necessary to be to send an emergency medical team to the area.
 
+Multiple types of emergency response teams , i.e. Rescue Teams - Buildings , Medical Teams - Buildings & Medical , Utility Companies - Sewage & Power, Traffic Control - Roads & Bridges.
 
 
 ### Question 2
