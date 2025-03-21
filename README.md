@@ -27,3 +27,7 @@ $ npm start
 ```
 
 You don't need to restart the application every time you make changes.
+
+# Plan of Action
+
+Scroll bar to show how magnitude of earthquake changes based on time
