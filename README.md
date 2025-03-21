@@ -46,7 +46,7 @@ Use map for showing which area is hardest hit and colour code it to show severit
 
 Multiple types of emergency response teams , i.e. Rescue Teams - Buildings , Medical Teams - Buildings & Medical , Utility Companies - Sewage & Power, Traffic Control - Roads & Bridges.
 
-## Plan for Question 1 currently
+#### Plan for Question 1 currently
 Ethan to go away, finalise plan and sort pre-processing to get to this stage with data.
 <img width="523" alt="Screenshot 2025-03-21 at 14 18 44" src="https://github.com/user-attachments/assets/e8814565-799d-40fc-9329-6254f6e71a6c" />
 
