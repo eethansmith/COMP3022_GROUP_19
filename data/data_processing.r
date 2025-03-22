@@ -31,3 +31,28 @@ df <- df %>%
 
 # Save the processed and sorted data to CSV
 write.csv(df, "data/resources/mc1-report-data-processed.csv", row.names = FALSE)
+
+# Create datetime object from date and timestamp
+df$datetime <- as.POSIXct(paste(df$date, df$timestamp), format = "%Y-%m-%d %H:%M:%S")
+
+# Round down datetime to the hour
+df$rounded_hour <- format(df$datetime, "%Y-%m-%d %H:00:00")
+
+# Group by location and rounded hour, calculate rounded integer averages
+df_hourly <- df %>%
+  group_by(location, rounded_hour) %>%
+  summarise(
+    date = as.Date(first(date)),
+    timestamp = format(as.POSIXct(first(rounded_hour)), "%H:%M:%S"),
+    sewer_and_water = round(mean(sewer_and_water, na.rm = TRUE)),
+    power = round(mean(power, na.rm = TRUE)),
+    roads_and_bridges = round(mean(roads_and_bridges, na.rm = TRUE)),
+    medical = round(mean(medical, na.rm = TRUE)),
+    buildings = round(mean(buildings, na.rm = TRUE)),
+    shake_intensity = round(mean(shake_intensity, na.rm = TRUE))
+  ) %>%
+  ungroup() %>%
+  select(date, timestamp, location, everything(), -rounded_hour)
+
+# Save hourly rounded dataset to new CSV
+write.csv(df_hourly, "data/resources/mc1-report-data-hourly-rounded.csv", row.names = FALSE)
