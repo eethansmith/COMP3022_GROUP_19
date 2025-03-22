@@ -32,27 +32,47 @@ df <- df %>%
 # Save the processed and sorted data to CSV
 write.csv(df, "data/resources/mc1-report-data-processed.csv", row.names = FALSE)
 
-# Create datetime object from date and timestamp
+# Make sure df$datetime exists and is valid
 df$datetime <- as.POSIXct(paste(df$date, df$timestamp), format = "%Y-%m-%d %H:%M:%S")
 
-# Round down datetime to the hour
-df$rounded_hour <- format(df$datetime, "%Y-%m-%d %H:00:00")
+# Filter out rows with NA datetime
+df <- df[!is.na(df$datetime), ]
 
-# Group by location and rounded hour, calculate rounded integer averages
-df_hourly <- df %>%
-  group_by(location, rounded_hour) %>%
-  summarise(
-    date = as.Date(first(date)),
-    timestamp = format(as.POSIXct(first(rounded_hour)), "%H:%M:%S"),
-    sewer_and_water = round(mean(sewer_and_water, na.rm = TRUE)),
-    power = round(mean(power, na.rm = TRUE)),
-    roads_and_bridges = round(mean(roads_and_bridges, na.rm = TRUE)),
-    medical = round(mean(medical, na.rm = TRUE)),
-    buildings = round(mean(buildings, na.rm = TRUE)),
-    shake_intensity = round(mean(shake_intensity, na.rm = TRUE))
-  ) %>%
-  ungroup() %>%
-  select(date, timestamp, location, everything(), -rounded_hour)
+# Create full sequence of hourly times in the dataset
+min_time <- min(df$datetime, na.rm = TRUE)
+max_time <- max(df$datetime, na.rm = TRUE)
+all_hours <- seq(from = as.POSIXct(format(min_time, "%Y-%m-%d %H:00:00")),
+                 to = as.POSIXct(format(max_time, "%Y-%m-%d %H:00:00")),
+                 by = "hour")
 
-# Save hourly rounded dataset to new CSV
-write.csv(df_hourly, "data/resources/mc1-report-data-hourly-rounded.csv", row.names = FALSE)
+# Get all unique locations
+all_locations <- unique(df$location)
+
+# Create full grid of all hour-location combinations
+full_grid <- expand.grid(
+  location = all_locations,
+  rounded_hour = format(all_hours, "%Y-%m-%d %H:00:00"),
+  stringsAsFactors = FALSE
+)
+
+# Merge with the summarised df_hourly data
+df_hourly_full <- merge(
+  full_grid,
+  df_hourly %>%
+    mutate(rounded_hour = paste(date, timestamp)) %>%
+    select(-date, -timestamp),
+  by = c("location", "rounded_hour"),
+  all.x = TRUE
+)
+
+# Recreate proper date and timestamp columns
+df_hourly_full$date <- as.Date(df_hourly_full$rounded_hour)
+df_hourly_full$timestamp <- format(as.POSIXct(df_hourly_full$rounded_hour), "%H:%M:%S")
+
+# Reorder columns
+df_hourly_full <- df_hourly_full %>%
+  select(date, timestamp, location, sewer_and_water, power, roads_and_bridges,
+         medical, buildings, shake_intensity)
+
+# Save final CSV with all hours filled
+write.csv(df_hourly_full, "data/resources/mc1-report-data-hourly-rounded.csv", row.names = FALSE)
