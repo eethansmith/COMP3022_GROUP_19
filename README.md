@@ -50,6 +50,9 @@ Multiple types of emergency response teams , i.e. Rescue Teams - Buildings , Med
 Ethan to go away, finalise plan and sort pre-processing to get to this stage with data.
 <img width="523" alt="Screenshot 2025-03-21 at 14 18 44" src="https://github.com/user-attachments/assets/e8814565-799d-40fc-9329-6254f6e71a6c" />
 
+Updated plan for Q1
+<img width="665" alt="Screenshot 2025-03-22 at 15 03 33" src="https://github.com/user-attachments/assets/c1bd60f3-5340-4ffe-899d-0b8d89ebebf2" />
+
 
 ### Question 2
 #### Use visual analytics to show uncertainty in the data. Compare the reliability of neighborhood reports. Which neighborhoods are providing reliable reports? Provide a rationale for your response.
