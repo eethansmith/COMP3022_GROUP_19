@@ -69,30 +69,45 @@ A graph for data points being impact values for a certain hour-standard deviatio
 <img width="497" alt="image" src="https://github.com/user-attachments/assets/7edde486-38b9-4c8e-bf9c-4e7cb36bc295" />
 
 0.0–0.3=Blue Low uncertainty(very consistent reports)
+
 0.3–0.6=Orange	Moderate uncertainty
+
 0.6–1.0=Red	High uncertainty (reports are conflicting / sparse)
+
 How is uncertainity score calculated:
+
 1)Variability in citizen reports
+
 2)Report count (sample size)
+
 3)Missing or incomplete data
 
 Data columns to be used for calculation.
+
 1)location-To group data by neighborhood 
+
 2)buildings	Main metric for damage severity
+
 3)shake_intensity	Often missing → indicates data gaps
+
 5)time	(Optional) Use for later time-based consistency
-5)Report count	Derived: Number of entries per neighborhood
+
+6)Report count	Derived: Number of entries per neighborhood
 
 
 Metrics to be calculted:
+
 report_count=Count of rows in each location group=Fewer reports → more uncertainty
 std_dev_buildings=Standard deviation of buildings column per location =	High variability ->inconsistent reports
 missing_shake_pct=% of rows in a location with shake_intensity as NaN =	More missing data  less reliable info
 
 
 It needs to be normalised to be in a 0-1 scale
+
 normalized_report_count = 1 - (count - min_count) / (max_count - min_count)
+
 normalized_std_dev = (std_dev - min_std) / (max_std - min_std)
+
 missing_shake_pct = num_missing / total_reports
 
 Final Uncertainity Score:
