@@ -62,12 +62,61 @@ have variation in colour based on duration and impact
 
 A graph for data points being impact values for a certain hour-standard deviation being calculated from that mean to each data point.
 
+#New edit 23/03/2025
+a)Use visual analytics to show uncertainty in the data-Use colour coding:0.0–0.3=Blue Low uncertainty(very consistent reports)
+0.3–0.6=Orange	Moderate uncertainty
+0.6–1.0=Red	High uncertainty (reports are conflicting / sparse)
+How is uncertainity score calculated:
+1)Variability in citizen reports
+2)Report count (sample size)
+3)Missing or incomplete data
+-----------------------------
+Data columns to be used for calculation.
+1)location-To group data by neighborhood 
+2)buildings	Main metric for damage severity
+3)shake_intensity	Often missing → indicates data gaps
+5)time	(Optional) Use for later time-based consistency
+5)Report count	Derived: Number of entries per neighborhood
+---------------------------------------------------------
+Metrics to be calculted:
+report_count=Count of rows in each location group=Fewer reports → more uncertainty
+std_dev_buildings=Standard deviation of buildings column per location =	High variability ->inconsistent reports
+missing_shake_pct=% of rows in a location with shake_intensity as NaN =	More missing data  less reliable info
+----------------------------------------------------------
+It needs to be normalised to be in a 0-1 scale
+normalized_report_count = 1 - (count - min_count) / (max_count - min_count)
+normalized_std_dev = (std_dev - min_std) / (max_std - min_std)
+missing_shake_pct = num_missing / total_reports
+----------------------------------------------------------
+Final Uncertainity Score:
+uncertainty_score = (
+    0.3 * normalized_report_count +
+    0.5 * normalized_std_dev +
+    0.2 * missing_shake_pct
+)
+
+We can decide on the weights and justify it.
+0.0–0.3 → Low Uncertainty
+0.3–0.6 → Medium
+0.6–1.0 → High
+----------------------------------------------------------
+#Compare the reliability of neighborhood reports. Which neighborhoods are providing reliable reports?
+For the reliability part of question:
+reliability_score = 1 - uncertainty_score
+If the map is clicked-say location 3 is clicked,it will have a pop up a dialogue box with reliability score.
+On the side of the map,there could be a ranking of the neighbourhoods from most reliable to least reliable to provide comaprison(This could also be a bar chart if needed)
+
+# Provide a rationale for your response
+We can explain how we decided on the formula and how the visualisation will help emergency responder know hwo reliable the data from a location is.
+------------------------------------------------------------
+
+
 ### Question 3
 #### How do conditions change over time? How does uncertainty in change over time? Describe the key changes you see. 
 
 Conditions changing over time-Scroll bar of time-so its easier for emergency responder to pause and check
 
-19locations in dataset-refer to example 1-dpst 
+19 locations in dataset-refer to example 1-dpst 
 Scroll bar to show how magnitude of earthquake changes based on time
 
 # Fianl Deliverables
