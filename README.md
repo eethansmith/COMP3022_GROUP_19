@@ -63,9 +63,12 @@ have variation in colour based on duration and impact
 A graph for data points being impact values for a certain hour-standard deviation being calculated from that mean to each data point.
 
 #New edit 23/03/2025
-a)Use visual analytics to show uncertainty in the data-Use colour coding:0.0–0.3=Blue Low uncertainty(very consistent reports)
+
+#### Use visual analytics to show uncertainty in the data-Use colour coding:
+
 <img width="497" alt="image" src="https://github.com/user-attachments/assets/7edde486-38b9-4c8e-bf9c-4e7cb36bc295" />
 
+0.0–0.3=Blue Low uncertainty(very consistent reports)
 0.3–0.6=Orange	Moderate uncertainty
 0.6–1.0=Red	High uncertainty (reports are conflicting / sparse)
 How is uncertainity score calculated:
@@ -104,13 +107,13 @@ We can decide on the weights and justify it.
 0.3–0.6 → Medium
 0.6–1.0 → High
 
-# Compare the reliability of neighborhood reports. Which neighborhoods are providing reliable reports?
+#### Compare the reliability of neighborhood reports. Which neighborhoods are providing reliable reports?
 For the reliability part of question:
 reliability_score = 1 - uncertainty_score
 If the map is clicked-say location 3 is clicked,it will have a pop up a dialogue box with reliability score.
 On the side of the map,there could be a ranking of the neighbourhoods from most reliable to least reliable to provide comaprison(This could also be a bar chart if needed)
 
-# Provide a rationale for your response
+#### Provide a rationale for your response
 We can explain how we decided on the formula and how the visualisation will help emergency responder know hwo reliable the data from a location is.
 
 
