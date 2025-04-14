@@ -19,13 +19,14 @@ const Tabular = ({ tabs }) => {
                     return (
                         <button
                             key = {index}
-                            className = {`${styles["header-button"]} ${index === activeTabIndex ? styles["active"] : ""}`}
+                            className = {`${styles["header-button"]} ${index === activeTabIndex ? styles["active"] : styles["inactive"]}`}
                             onClick = {(() => setActiveTab(index))}
                         >
                             {tab.header} {/* Set the Header as the label */}
                         </button>
                     );
                 })}
+                <div className={styles["header-fill"]}></div>
             </div>
 
             {/* Display the selected tab's content */}

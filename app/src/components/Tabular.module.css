@@ -1,29 +1,47 @@
 .container {
-
+    width: 100%;
 }
 
 .header-container {
     display: flex;
     flex-direction: row;
+    justify-content: left;
 }
 
 .header-button {
-    padding: 10px 20px;
+    padding: 10px 40px;
     font-size: 1rem;
-    font-weight: 400I a;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
+    background-color: whitesmoke;
+    color: darkslategray;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    border-radius: 20px 20px 0px 0px;
 }
 
-.header-button:hover {
-    background-color: #0056b3;
+.inactive:hover {
+    background-color: lightgray;
+}
+
+.header-fill {
+    width: 100%;
+    border-bottom: 5px solid black;
 }
 
 .active {
-    background-color: antiquewhite;
-    font-weight: 800;
+    border: 5px solid black;
+    border-bottom: none;
+    background-color: white;
+    font-weight: 600;
+    color: black;
+}
+
+
+.inactive {
+    /* border: 2px solid black; */
+    border:none;
+    border-bottom: 5px solid black;
+}
+
+.content {
+    padding: 10px;
 }
