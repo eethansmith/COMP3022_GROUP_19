@@ -10,7 +10,7 @@ const Question1 = () => {
     const tabs = [
         createTab("Overview", <OverviewTab />),
         createTab("Details", <p>This is the details tab.</p>),
-        createTab("MORE DETAILS", <p>This is the MORE details tab.</p>)
+        createTab("More", <p>This is the MORE details tab.</p>)
     ];
 
     return (
