@@ -2,15 +2,16 @@ import Tabular, { createTab } from "../../components/Tabular";
 import styles from "./Q1.module.css"
 
 // Tabs
-import OverviewTab from "./Tabs/OverviewTab";
+import RescueTab from "./Tabs/Rescue";
 
 // Just testing if the tabs work
 const Question1 = () => {
 
     const tabs = [
-        createTab("Overview", <OverviewTab />),
-        createTab("Details", <p>This is the details tab.</p>),
-        createTab("More", <p>This is the MORE details tab.</p>)
+        createTab("Rescue Team", <RescueTab />),
+        createTab("Medical Services", <p>This is the details tab.</p>),
+        createTab("Utilities", <p>This is the MORE details tab.</p>),
+        createTab("Traffic Control", <p>Theres nothing here.</p>)
     ];
 
     return (

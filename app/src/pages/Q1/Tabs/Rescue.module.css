@@ -1,0 +1,59 @@
+.body {
+    
+}
+
+.grid-container {
+    
+    display: grid;
+    grid-template-columns: 4fr 3fr;
+    grid-template-rows: 1fr 1fr;
+
+    gap: 20px;  
+
+    width: auto;
+    height: 1000px;
+}
+
+.grid-item-container {
+    
+    display: flex;
+    justify-content: center;
+}
+
+.map-container {
+    
+}
+
+.line-chart-container {
+
+}
+
+.radar-graph-container {
+    grid-column-start: 1;
+    grid-column-end: 3;
+}
+
+.grid-item {
+    width: 100%;
+    height: 100%;
+    background-color: whitesmoke;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 2px solid black;
+    border-radius: 5px;
+}
+
+.map {
+
+}
+
+.line-chart {
+
+}
+
+.radar-graph {
+    
+}
