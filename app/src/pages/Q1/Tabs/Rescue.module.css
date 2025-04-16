@@ -5,7 +5,7 @@
 .grid-container {
     
     display: grid;
-    grid-template-columns: 4fr 3fr;
+    grid-template-columns: 1fr 3fr;
     grid-template-rows: 1fr 1fr;
 
     gap: 20px;  
@@ -18,10 +18,12 @@
     
     display: flex;
     justify-content: center;
+    width: auto;
 }
 
 .map-container {
-    
+    width: 900px;
+    height: 600px;
 }
 
 .line-chart-container {

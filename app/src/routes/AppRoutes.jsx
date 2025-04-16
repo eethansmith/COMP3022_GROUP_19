@@ -11,6 +11,7 @@ const AppRoutes = () => {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/example" element={<ExamplePage />} />
+        
         <Route path="/Q1" element={<Question1 />} />
         <Route path="/Q2" element={<Question2 />} />
         <Route path="/Q3" element={<Question3 />} />
