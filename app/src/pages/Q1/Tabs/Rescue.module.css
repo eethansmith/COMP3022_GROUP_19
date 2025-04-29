@@ -16,17 +16,19 @@
   
   /* content fills the rest of the height and becomes the two-column layout */
   .content {
-    flex: 1;                 /* fill all remaining vertical space */
+    flex: 1;                  
     display: flex;
     gap: 16px;
     padding: 16px;
     box-sizing: border-box;
+    min-height: 0;          /* ← allow this flex item to shrink */
   }
   
   /* Left panel: 2/3 of content width */
   .leftPanel {
     flex: 2;
     display: flex;
+    min-height: 0;          /* ← already added, keep this */
   }
   
   .lineChart {
@@ -49,6 +51,7 @@
   .radarContainer {
     flex: 1;
     display: flex;
+    min-height: 0;
   }
   
   .mapChart,
@@ -79,7 +82,7 @@
     display: flex;
   }
   
-  /* Tell the SVG to fill those containers */
+  .lineChart,
   .mapChart,
   .radarChart {
     flex: 1;

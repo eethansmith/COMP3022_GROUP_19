@@ -12,4 +12,4 @@ zone_priority <- aggregate(priorityScore ~ location, data = df_clean, FUN = func
 
 zone_priority <- zone_priority[order(-zone_priority$priorityScore), ]
 
-write.csv(zone_priority, "data/resources/rescue-service-priority.csv", row.names = FALSE)
+write.csv(zone_priority, "app/public/data/resources/rescue-service-priority.csv", row.names = FALSE)

@@ -37,11 +37,12 @@ const Rescue = () => {
 
         {/* Left panel: big line chart */}
         <div className={styles.leftPanel}>
-          <LineChart
-            selectedRegion={selectedRegion}
-            setSelectedRegion={setSelectedRegion}
-            className={styles.lineChart}
-          />
+        <LineChart
+          dataUrl='/data/resources/rescue-service-timeline.csv'
+          selectedRegion={selectedRegion}
+          setSelectedRegion={setSelectedRegion}
+          className={styles.lineChart}
+        />
         </div>
 
         {/* Right panel: top=map, bottom=radar */}
