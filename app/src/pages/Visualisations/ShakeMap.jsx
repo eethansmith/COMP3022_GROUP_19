@@ -1,71 +1,72 @@
-// src/pages/Q1/Visualisations/ShakeMap.jsx
+// src/pages/Visualisations/ShakeMap.jsx
 import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import PropTypes from 'prop-types';
 
+// colour-scale unchanged
 const colourScale = d3
   .scaleLinear()
   .domain([0, 3.5, 7.5, 10])
   .range(['#FFFBEA', '#FFE9C9', '#FF9A4D', '#8B0000'])
-  .interpolate(d3.interpolateRgb.gamma(1.8)) // perceptual γ
+  .interpolate(d3.interpolateRgb.gamma(1.8))
   .clamp(true);
 
+// define margin here so it's in scope
+const margin = { top: 20, right: 20, bottom: 30, left: 40 };
 
 const ShakeMap = ({
   data,
   scoresMap,
   selectedRegion,
   setSelectedRegion,
-  width  = 800,
-  height = 600,
+  className,     // now destructured
   ...props
 }) => {
   const svgRef = useRef(null);
 
   useEffect(() => {
-    // Don’t draw until we have both geo-data and scores
     if (!data || !scoresMap) return;
 
-    const innerWidth  = width;
-    const innerHeight = height;
+    // measure the actual container size
+    const svgEl = svgRef.current;
+    const { width, height } = svgEl.getBoundingClientRect();
+    const innerWidth  = width  - margin.left - margin.right;
+    const innerHeight = height - margin.top  - margin.bottom;
 
-    const svg = d3.select(svgRef.current);
-    svg.selectAll('*').remove();               // clear previous frame
+    const svg = d3.select(svgEl);
+    svg.selectAll('*').remove();
 
     const projection = d3.geoMercator()
       .fitSize([innerWidth, innerHeight], data);
 
     const path = d3.geoPath().projection(projection);
 
-    /* ---------- draw map ---------- */
     const g = svg.append('g')
-      .attr('transform', `translate(0,0)`);
+      .attr('transform', `translate(${margin.left},${margin.top})`);
 
+    // draw the features
     g.selectAll('path')
       .data(data.features)
-      .enter()
-      .append('path')
+      .enter().append('path')
         .attr('d', path)
         .attr('fill', d => {
-          const id = +d.properties.Id;       // coerce string → number
+          const id = +d.properties.Id;
           const v  = scoresMap.get(id);
           return (v != null && !isNaN(v))
             ? colourScale(v)
-            : '#ccc';                      // grey fallback
+            : '#ccc';
         })
         .attr('stroke', '#fff')
         .attr('stroke-width', 0.5)
-        .attr('opacity', 1)
-        .on('mouseover', function () { d3.select(this).attr('opacity', 0.7); })
-        .on('mouseout',  function () { d3.select(this).attr('opacity', 1); })
+        .on('mouseover', function() { d3.select(this).attr('opacity', 0.7); })
+        .on('mouseout',  function() { d3.select(this).attr('opacity', 1); })
         .on('click',    (_, d) => setSelectedRegion(d.properties.Id))
         .style('cursor', 'pointer');
 
-    /* ---------- labels ---------- */
+    // labels
     g.selectAll('text')
       .data(data.features)
-      .enter()
-      .append('text')
+      .enter().append('text')
         .attr('x', d => path.centroid(d)[0])
         .attr('y', d => path.centroid(d)[1])
         .attr('text-anchor', 'middle')
@@ -75,7 +76,7 @@ const ShakeMap = ({
         .style('pointer-events', 'none')
         .text(d => d.properties.Nbrhood);
 
-    /* ---------- legend ---------- */
+    // legend
     const legendWidth = 160;
     const legendScale = d3.scaleLinear()
       .domain([0, 10])
@@ -88,10 +89,7 @@ const ShakeMap = ({
     legend.append('defs')
       .append('linearGradient')
       .attr('id', 'gradient')
-      .selectAll('stop')
-      .data(d3.range(0, 101))
-      .enter()
-      .append('stop')
+      .selectAll('stop').data(d3.range(0, 101)).enter().append('stop')
         .attr('offset', d => `${d}%`)
         .attr('stop-color', d => colourScale(d / 10));
 
@@ -109,26 +107,28 @@ const ShakeMap = ({
           .tickFormat(d3.format('.1f'))
       );
 
-  // we now list every external value we reference inside this effect:
-  }, [data, scoresMap, selectedRegion, setSelectedRegion, width, height]);
+  // width/height come from getBoundingClientRect()—they’re not React deps,
+  // so we omit them here and disable the lint rule for this line:
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, scoresMap, selectedRegion, setSelectedRegion, className]);
 
   return (
     <svg
       ref={svgRef}
-      width={width}
-      height={height}
+      className={className}
+      width="100%"
+      height="100%"
       {...props}
     />
   );
 };
 
 ShakeMap.propTypes = {
-  data:             PropTypes.object.isRequired,
-  scoresMap:        PropTypes.instanceOf(Map).isRequired,
-  selectedRegion:   PropTypes.any,
-  setSelectedRegion:PropTypes.func.isRequired,
-  width:            PropTypes.number,
-  height:           PropTypes.number,
+  data:              PropTypes.object.isRequired,
+  scoresMap:         PropTypes.instanceOf(Map).isRequired,
+  selectedRegion:    PropTypes.any,
+  setSelectedRegion: PropTypes.func.isRequired,
+  className:         PropTypes.string,
 };
 
 export default ShakeMap;

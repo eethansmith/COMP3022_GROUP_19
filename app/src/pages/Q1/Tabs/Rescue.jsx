@@ -1,4 +1,3 @@
-// src/pages/Q1/Tabs/Rescue.jsx
 import React, { useState, useEffect } from 'react';
 import * as d3 from 'd3';
 import styles from './Rescue.module.css';
@@ -48,13 +47,13 @@ const Rescue = () => {
         {/* Right panel: top=map, bottom=radar */}
         <div className={styles.rightPanel}>
           <div className={styles.mapContainer}>
-            <ShakeMap
-              data={geoJson}
-              scoresMap={scoresMap}
-              selectedRegion={selectedRegion}
-              setSelectedRegion={setSelectedRegion}
-              className={styles.mapChart}
-            />
+          <ShakeMap
+            data={geoJson}
+            scoresMap={scoresMap}
+            selectedRegion={selectedRegion}
+            setSelectedRegion={setSelectedRegion}
+            className={styles.mapChart}  // no width/height props any more
+          />
           </div>
           <div className={styles.radarContainer}>
             <RadarGraph
