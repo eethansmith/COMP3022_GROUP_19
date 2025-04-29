@@ -1,7 +1,12 @@
+// src/pages/Q1/Visualisations/ShakeMap.jsx
 import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import PropTypes from 'prop-types';
 
+/* ------------------------------------------------------------------+
+|  Piece-wise colour scale                                            |
+|  0–3.5 → creams, 3.5–7.5 → oranges, 7.5–10 → “old” red              |
++-------------------------------------------------------------------*/
 const colourScale = d3
   .scaleLinear()
   .domain([0, 3.5, 7.5, 10])
