@@ -43,6 +43,11 @@ const Rescue = () => {
           setSelectedRegion={setSelectedRegion}
           className={styles.lineChart}
         />
+          <RadarGraph                    
+            className={styles.radarGraph}
+            selectedRegion={selectedRegion}
+            setSelectedRegion={setSelectedRegion}
+          />
         </div>
 
         {/* Right panel: top=map, bottom=radar */}
@@ -56,15 +61,7 @@ const Rescue = () => {
             className={styles.mapChart}  // no width/height props any more
           />
           </div>
-          <div className={styles.radarContainer}>
-            <RadarGraph
-              selectedRegion={selectedRegion}
-              setSelectedRegion={setSelectedRegion}
-              className={styles.radarChart}
-            />
-          </div>
         </div>
-
       </div>
     </div>
   );

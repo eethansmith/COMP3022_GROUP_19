@@ -1,0 +1,7 @@
+.container  { display: flex; gap: 1rem; }
+.grid       { display: grid; grid-template-columns: repeat(5, 1fr); grid-auto-rows: 120px; gap: .5rem; }
+.smallSvg   { cursor: pointer; }
+.bigChart   { margin-left: 1rem; display: flex; align-items: center; }
+.axis       { stroke: #ccc; stroke-width: 1; }
+.smallFill  { fill: steelblue; fill-opacity: .35; stroke: steelblue; stroke-width: 1; }
+.bigFill    { fill: orange;   fill-opacity: .4;  stroke: orange;   stroke-width: 2; }

@@ -1,92 +1,67 @@
-/* overall wrapper stacks header + content vertically */
 .wrapper {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;       
-    box-sizing: border-box;
-  }
-  
-  /* header takes only as much height as its text needs */
-  .header {
-    padding: 16px;
-    background: #fafafa;
-    border-bottom: 1px solid #ddd;
-    /* optional: give it a max-height and scroll if you have LOTS of text */
-  }
-  
-  /* content fills the rest of the height and becomes the two-column layout */
-  .content {
-    flex: 1;                  
-    display: flex;
-    gap: 16px;
-    padding: 16px;
-    box-sizing: border-box;
-    min-height: 0;          /* ← allow this flex item to shrink */
-  }
-  
-  /* Left panel: 2/3 of content width */
-  .leftPanel {
-    flex: 2;
-    display: flex;
-    min-height: 0;          /* ← already added, keep this */
-  }
-  
-  .lineChart {
-    flex: 1;
-    width: 100%;
-    height: 100%;
-    background: #fff;
-    border: 1px solid #ddd;
-  }
-  
-  /* Right panel: 1/3 of content width, split vertically */
-  .rightPanel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .mapContainer,
-  .radarContainer {
-    flex: 1;
-    display: flex;
-    min-height: 0;
-  }
-  
-  .mapChart,
-  .radarChart {
-    flex: 1;
-    width: 100%;
-    height: 100%;
-    background: #fff;
-    border: 1px solid #ddd;
-  }
-  
-  /* Right panel: top=map, bottom=radar */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+.header {
+  padding: 16px;
+  background: #fafafa;
+  border-bottom: 1px solid #ddd;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  box-sizing: border-box;
+  min-height: 0;
+}
+
+.leftPanel {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+}
+
+.lineChart {
+  flex: 6;
+}
+
+.radarChart {
+  flex: 4;
+}
+
 .rightPanel {
-    flex: 1;              /* takes one-third of horizontal space */
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  /* Give the map more vertical “weight” than the radar */
-  .mapContainer {
-    flex: 2;              /* 2/3 of the rightPanel’s height */
-    display: flex;
-  }
-  
-  .radarContainer {
-    flex: 1;              /* 1/3 of the rightPanel’s height */
-    display: flex;
-  }
-  
-  .lineChart,
-  .mapChart,
-  .radarChart {
-    flex: 1;
-    width: 100%;
-    height: 100%;
-  }
-  
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mapContainer,
+.radarContainer {
+  display: flex;
+  min-height: 0;
+}
+
+.mapContainer {
+  flex: 2;
+}
+
+.radarContainer {
+  flex: 1;
+}
+
+.mapChart,
+.radarChart {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border: 1px solid #ddd;
+}
