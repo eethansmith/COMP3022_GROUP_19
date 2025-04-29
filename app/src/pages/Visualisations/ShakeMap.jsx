@@ -10,8 +10,6 @@ const colourScale = d3
   .interpolate(d3.interpolateRgb.gamma(1.8)) // perceptual γ
   .clamp(true);
 
-// Pull margin out of the component so it isn’t re-created every render
-const margin = { top: 20, right: 20, bottom: 30, left: 40 };
 
 const ShakeMap = ({
   data,
@@ -28,8 +26,8 @@ const ShakeMap = ({
     // Don’t draw until we have both geo-data and scores
     if (!data || !scoresMap) return;
 
-    const innerWidth  = width  - margin.left - margin.right;
-    const innerHeight = height - margin.top  - margin.bottom;
+    const innerWidth  = width;
+    const innerHeight = height;
 
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();               // clear previous frame
@@ -41,7 +39,7 @@ const ShakeMap = ({
 
     /* ---------- draw map ---------- */
     const g = svg.append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+      .attr('transform', `translate(0,0)`);
 
     g.selectAll('path')
       .data(data.features)

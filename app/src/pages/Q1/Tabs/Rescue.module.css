@@ -1,61 +1,62 @@
-.body {
-    
-}
-
-.grid-container {
-    
-    display: grid;
-    grid-template-columns: 1fr 3fr;
-    grid-template-rows: 1fr 1fr;
-
-    gap: 20px;  
-
-    width: auto;
-    height: 1000px;
-}
-
-.grid-item-container {
-    
+/* overall wrapper stacks header + content vertically */
+.wrapper {
     display: flex;
-    justify-content: center;
-    width: auto;
-}
-
-.map-container {
-    width: 900px;
-    height: 600px;
-}
-
-.line-chart-container {
-
-}
-
-.radar-graph-container {
-    grid-column-start: 1;
-    grid-column-end: 3;
-}
-
-.grid-item {
+    flex-direction: column;
+    height: 100vh;       
+    box-sizing: border-box;
+  }
+  
+  /* header takes only as much height as its text needs */
+  .header {
+    padding: 16px;
+    background: #fafafa;
+    border-bottom: 1px solid #ddd;
+    /* optional: give it a max-height and scroll if you have LOTS of text */
+  }
+  
+  /* content fills the rest of the height and becomes the two-column layout */
+  .content {
+    flex: 1;                 /* fill all remaining vertical space */
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+  
+  /* Left panel: 2/3 of content width */
+  .leftPanel {
+    flex: 2;
+    display: flex;
+  }
+  
+  .lineChart {
+    flex: 1;
     width: 100%;
     height: 100%;
-    background-color: whitesmoke;
-
+    background: #fff;
+    border: 1px solid #ddd;
+  }
+  
+  /* Right panel: 1/3 of content width, split vertically */
+  .rightPanel {
+    flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border: 2px solid black;
-    border-radius: 5px;
-}
-
-.map {
-
-}
-
-.line-chart {
-
-}
-
-.radar-graph {
-    
-}
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .mapContainer,
+  .radarContainer {
+    flex: 1;
+    display: flex;
+  }
+  
+  .mapChart,
+  .radarChart {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    border: 1px solid #ddd;
+  }
+  

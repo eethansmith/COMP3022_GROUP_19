@@ -1,3 +1,4 @@
+// src/pages/Q1/Tabs/Rescue.jsx
 import React, { useState, useEffect } from 'react';
 import * as d3 from 'd3';
 import styles from './Rescue.module.css';
@@ -8,62 +9,65 @@ import geoJson from '../../../assets/geojson/StHimark.geo.json';
 
 const Rescue = () => {
   const [selectedRegion, setSelectedRegion] = useState(null);
-  const [scoresMap, setScoresMap]           = useState(new Map());
+  const [scoresMap,     setScoresMap]     = useState(new Map());
 
   useEffect(() => {
-    const csvUrl = `/data/resources/rescue-service-priority.csv`;
-
+    const csvUrl = '/data/resources/rescue-service-priority.csv';
     d3.csv(csvUrl, d3.autoType)
-      .then(rows => {
-        // Each `r` has { location: number, priorityScore: number }
-        const m = new Map(
-          rows.map(r => {
-            console.log('  row.region=', r.location, '  row.score=', r.priorityScore);
-            return [+r.location, +r.priorityScore];
-          }));
-          setScoresMap(m);
-      })
-  }, []); 
+      .then(rows => setScoresMap(new Map(rows.map(r => [+r.location, +r.priorityScore]))))
+      .catch(err => console.error(err));
+  }, []);
 
   return (
-    <div className={styles.body}>
-      <p>
-        This dashboard shows which areas have been most impacted by building damage during the earthquake,
-        based on resident reports. These are the locations where the risk to life is highest and where
-        Rescue Services are most urgently needed.
-      </p>
-      <p>
-        Severity scores are calculated using a weighted formula: 70% building damage and 30% shake
-        intensity, averaged across all reports for each area. To emphasise urgency, the final score for
-        each location is scaled by a factor of 2, highlighting zones that should be prioritised for
-        emergency response.
-      </p>
+    <div className={styles.wrapper}>
 
-      <div className={styles['grid-container']}>
-        <div className={`${styles['grid-item-container']} ${styles['map-container']}`}>
-          <ShakeMap
-            data={geoJson}
-            scoresMap={scoresMap}
-            selectedRegion={selectedRegion}
-            setSelectedRegion={setSelectedRegion}
-            width={800}
-            height={600}
-          />
-        </div>
+      {/* ─── Header with your explanatory text ──────────────────────────── */}
+      <div className={styles.header}>
+        <p>
+          This dashboard shows which areas have been most impacted by building damage during the earthquake,
+          based on resident reports. These are the locations where the risk to life is highest and where
+          Rescue Services are most urgently needed.
+        </p>
+        <p>
+          Severity scores are calculated using a weighted formula: 70% building damage and 30% shake
+          intensity, averaged across all reports for each area. To emphasise urgency, the final score for
+          each location is scaled by a factor of 2, highlighting zones that should be prioritised for
+          emergency response.
+        </p>
+      </div>
 
-        <div className={`${styles['grid-item-container']} ${styles['line-chart-container']}`}>
+      {/* ─── Main content: left/right flex panels ───────────────────────── */}
+      <div className={styles.content}>
+
+        {/* Left panel: big line chart */}
+        <div className={styles.leftPanel}>
           <LineChart
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
+            className={styles.lineChart}
           />
         </div>
 
-        <div className={`${styles['grid-item-container']} ${styles['radar-graph-container']}`}>
-          <RadarGraph
-            selectedRegion={selectedRegion}
-            setSelectedRegion={setSelectedRegion}
-          />
+        {/* Right panel: top=map, bottom=radar */}
+        <div className={styles.rightPanel}>
+          <div className={styles.mapContainer}>
+            <ShakeMap
+              data={geoJson}
+              scoresMap={scoresMap}
+              selectedRegion={selectedRegion}
+              setSelectedRegion={setSelectedRegion}
+              className={styles.mapChart}
+            />
+          </div>
+          <div className={styles.radarContainer}>
+            <RadarGraph
+              selectedRegion={selectedRegion}
+              setSelectedRegion={setSelectedRegion}
+              className={styles.radarChart}
+            />
+          </div>
         </div>
+
       </div>
     </div>
   );
