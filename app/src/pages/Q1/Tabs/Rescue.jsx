@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import * as d3 from 'd3';
 import styles from './Rescue.module.css';
-import ShakeMap from '../Visualisations/ShakeMap';
-import LineChart from '../Visualisations/LineChart';
-import RadarGraph from '../Visualisations/RadarGraph';
+import ShakeMap from '../../Visualisations/ShakeMap';
+import LineChart from '../../Visualisations/LineChart';
+import RadarGraph from '../../Visualisations/RadarGraph';
 import geoJson from '../../../assets/geojson/StHimark.geo.json';
 
 const Rescue = () => {
@@ -15,17 +15,14 @@ const Rescue = () => {
 
     d3.csv(csvUrl, d3.autoType)
       .then(rows => {
-        console.log('🔍 First 5 CSV rows:', rows.slice(0,5));
         // Each `r` has { location: number, priorityScore: number }
         const m = new Map(
           rows.map(r => {
             console.log('  row.region=', r.location, '  row.score=', r.priorityScore);
             return [+r.location, +r.priorityScore];
           }));
-          console.log('✅ Built scoresMap with keys:', Array.from(m.keys()));
           setScoresMap(m);
       })
-      .catch(err => console.error('Error loading rescue CSV:', err));
   }, []); 
 
   return (
