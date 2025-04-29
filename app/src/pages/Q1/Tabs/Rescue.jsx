@@ -20,8 +20,6 @@ const Rescue = () => {
 
   return (
     <div className={styles.wrapper}>
-
-      {/* ─── Header with your explanatory text ──────────────────────────── */}
       <div className={styles.header}>
         <p>
           This dashboard shows which areas have been most impacted by building damage during the earthquake,
@@ -35,7 +33,6 @@ const Rescue = () => {
           emergency response.
         </p>
       </div>
-
       {/* ─── Main content: left/right flex panels ───────────────────────── */}
       <div className={styles.content}>
 
