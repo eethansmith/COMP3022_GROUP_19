@@ -6,90 +6,83 @@ const LineChart = ({
   dataUrl,
   selectedRegion,
   setSelectedRegion,
-  className = '',
-  style = {},
+  aspectRatio = 0.65,        
+  className  = '',
+  style      = {},
 }) => {
-  const containerRef = useRef(null);
-  const [data, setData] = useState([]);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    
+  const containerRef     = useRef(null);
+  const [data, setData]  = useState([]);
+  const [width, setWidth] = useState(0);          
 
-  // Load and parse CSV data from the provided URL
   useEffect(() => {
     if (!dataUrl) return;
     d3.csv(dataUrl, d3.autoType)
-      .then(rows => setData(rows))
-      .catch(err => console.error('Error loading data:', err));
+      .then(setData)
+      .catch(err => console.error('LineChart: data load error →', err));
   }, [dataUrl]);
 
-  // Observe container size changes for responsiveness
   useEffect(() => {
-    const observer = new ResizeObserver(entries => {
-      for (let entry of entries) {
-        const { width, height } = entry.contentRect;
-        setDimensions({ width, height });
-      }
-    });
-    if (containerRef.current) observer.observe(containerRef.current);
-    return () => observer.disconnect();
+    const ro = new ResizeObserver(([entry]) =>
+      setWidth(entry.contentRect.width)
+    );
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => ro.disconnect();
   }, []);
 
-  // Draw or update the chart whenever data, dimensions, or selection changes
   useEffect(() => {
-    if (!data.length || !dimensions.width || !dimensions.height) return;
+    if (!data.length || !width) return;
 
-    // Clear any existing SVG
-    const container = d3.select(containerRef.current);
-    container.selectAll('svg').remove();
+    const height  = width * aspectRatio;
+    const margin  = { top: 20, right: 30, bottom: 30, left: 40 };
+    const wPlot   = width  - margin.left - margin.right;
+    const hPlot   = height - margin.top  - margin.bottom;
 
-    // Chart margins
-    const margin = { top: 20, right: 30, bottom: 30, left: 40 };
-    const width = dimensions.width - margin.left - margin.right;
-    const height = dimensions.height - margin.top - margin.bottom;
+    const nested  = d3.group(data, d => d.area);
+    const areas   = Array.from(nested.keys());
 
-    // Group data by area
-    const nested = d3.group(data, d => d.area);
-    const areas = Array.from(nested.keys());
+    const x       = d3.scaleLinear()
+                      .domain(d3.extent(data, d => d.hour))
+                      .range([0, wPlot]);
 
-    // Scales
-    const x = d3.scaleLinear()
-      .domain(d3.extent(data, d => d.hour))
-      .range([0, width]);
+    const y       = d3.scaleLinear()
+                      .domain([0, d3.max(data, d => d.severity_score)])
+                      .nice()
+                      .range([hPlot, 0]);
 
-    const y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.severity_score)])
-      .nice()
-      .range([height, 0]);
+    const color   = d3.scaleOrdinal(d3.schemeCategory10).domain(areas);
 
-    // Color scale
-    const color = d3.scaleOrdinal(d3.schemeCategory10).domain(areas);
-
-    // Line generator
     const lineGen = d3.line()
-      .x(d => x(d.hour))
-      .y(d => y(d.severity_score))
-      .curve(d3.curveMonotoneX);
+                      .x(d => x(d.hour))
+                      .y(d => y(d.severity_score))
+                      .curve(d3.curveMonotoneX);
 
-    // Create SVG
-    const svg = container.append('svg')
-      .attr('width', dimensions.width)
-      .attr('height', dimensions.height)
-      .append('g')
-        .attr('transform', `translate(${margin.left},${margin.top})`);
+    const svg = d3.select(containerRef.current)
+      .selectAll('svg')
+      .data([null])
+      .join('svg')
+        .attr('width',  width)
+        .attr('height', height)
+        .attr('viewBox', `0 0 ${width} ${height}`)   
+        .style('overflow', 'visible');
 
-    // X axis
-    svg.append('g')
-      .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(x).ticks(10).tickFormat(d => d));
 
-    // Y axis
-    svg.append('g')
+    svg.selectAll('*').remove();
+
+    const g = svg.append('g')
+                 .attr('transform', `translate(${margin.left},${margin.top})`);
+
+
+    g.append('g')
+      .attr('transform', `translate(0,${hPlot})`)
+      .call(d3.axisBottom(x).ticks(10));
+
+    g.append('g')
       .call(d3.axisLeft(y));
 
-    // Draw lines for each area
     nested.forEach((values, area) => {
-      const sorted = values.sort((a, b) => a.hour - b.hour);
-      svg.append('path')
-        .datum(sorted)
+      g.append('path')
+        .datum(values.sort((a, b) => a.hour - b.hour))
         .attr('fill', 'none')
         .attr('stroke', color(area))
         .attr('stroke-width', selectedRegion === area ? 3 : 1.5)
@@ -104,7 +97,7 @@ const LineChart = ({
             .attr('stroke-width', selectedRegion === area ? 3 : 1.5);
         });
     });
-  }, [data, dimensions, selectedRegion, setSelectedRegion]);
+  }, [data, width, selectedRegion, setSelectedRegion, aspectRatio]);
 
   return (
     <div
@@ -115,16 +108,21 @@ const LineChart = ({
   );
 };
 
+
 LineChart.propTypes = {
-  dataUrl: PropTypes.string.isRequired,
-  selectedRegion: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  dataUrl:         PropTypes.string.isRequired,
+  selectedRegion:  PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   setSelectedRegion: PropTypes.func.isRequired,
-  className: PropTypes.string,
+  aspectRatio:     PropTypes.number,
+  className:       PropTypes.string,
+  style:           PropTypes.object,
 };
 
 LineChart.defaultProps = {
   selectedRegion: null,
-  className: '',
+  aspectRatio:    0.6,
+  className:      '',
+  style:          {},
 };
 
 export default LineChart;
