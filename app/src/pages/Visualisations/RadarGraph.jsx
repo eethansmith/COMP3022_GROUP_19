@@ -1,46 +1,45 @@
 // src/Visualisations/RadarGraph.jsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import * as d3 from "d3";
-import styles from "./RadarGraph.module.css";   // add a new css-module
+import styles from "./RadarGraph.module.css";
 
+/* ─── metrics in the CSV, fixed order ───────────────────────── */
 const METRICS = [
   "sewer_and_water",
   "power",
   "roads_and_bridges",
   "medical",
   "buildings",
-  "shake_intensity"
+  "shake_intensity",
 ];
 
-/* ─────────── Small reusable SVG radar ─────────── */
+/* ─── reusable radar SVG ────────────────────────────────────── */
 function RadarSVG({ data, size = 120, onClick, selected = false }) {
   const ref = useRef(null);
+
   useEffect(() => {
     if (!data) return;
-    const R   = size / 2 - 4;               // outer radius
-    const k   = METRICS.length;
-    const ang = (_, i) => (i / k) * (2 * Math.PI);
 
-    // scale 0-1 → 0-R (input file already rounded & 0-1)
+    const R   = size / 2 - 4;                  // outer radius
+    const k   = METRICS.length;
+    const ang = (_, i) => (i / k) * 2 * Math.PI;
+
     const r = d3.scaleLinear().domain([0, 1]).range([0, R]);
 
-    // convert metric scores to [x,y] pairs
     const pts = METRICS.map((m, i) => {
-      const a = ang(null, i) - Math.PI / 2; // rotate so first axis is up
+      const a = ang(null, i) - Math.PI / 2;
       const s = r(data[`${m}_score`]);
       return [R + s * Math.cos(a), R + s * Math.sin(a)];
     });
 
-    // draw
     const svg = d3.select(ref.current);
-    svg.selectAll("*").remove();            // clear
+    svg.selectAll("*").remove();               // clear
 
-    svg                                          // polygon
-      .append("polygon")
+    svg.append("polygon")                      // filled shape
       .attr("points", pts.map(p => p.join(",")).join(" "))
       .attr("class", selected ? styles.bigFill : styles.smallFill);
 
-    svg.selectAll(".axis")                       // axes
+    svg.selectAll(".axis")                     // axes
       .data(METRICS)
       .enter()
       .append("line")
@@ -63,46 +62,61 @@ function RadarSVG({ data, size = 120, onClick, selected = false }) {
   );
 }
 
-const RadarGraph = ({ 
-  selectedRegion, 
+/* ─── main component ────────────────────────────────────────── */
+const RadarGraph = ({
+  selectedRegion,
   setSelectedRegion,
-  smallSize =75,
-  bigSize =200,
+  smallSize = 75,
+  gap       = 8,          // px – keep in sync with CSS --radar-gap
 }) => {
-  const [rows, setRows] = useState([]);  
-  const [selected, setSelected] = useState(null);
+  const [rows, setRows]     = useState([]);
+  const [selected, setSel]  = useState(null);
 
+  /* load CSV once */
   useEffect(() => {
     d3.csv("/data/resources/radar-graph-areas.csv", d3.autoType).then(all => {
       all.sort((a, b) => d3.ascending(+a.area, +b.area));
       setRows(all);
-      if (!selectedRegion) {
-        setSelectedRegion(+all[0].area);
-      }
+      if (!selectedRegion) setSelectedRegion(+all[0].area);
     });
   }, []);
 
-  /* keep internal selected state in sync with parent */
-  useEffect(() => setSelected(selectedRegion), [selectedRegion]);
+  /* keep local state in sync with parent */
+  useEffect(() => setSel(selectedRegion), [selectedRegion]);
+
+  /* 18 small radars (remove the selected one) */
+  const visibleRows = useMemo(
+    () => rows.filter(d => +d.area !== selected),
+    [rows, selected]
+  );
+
+  /* big radar = height of 3 rows + 2 gaps */
+  const bigSize = useMemo(
+    () => smallSize * 3 + gap * 2,
+    [smallSize, gap]
+  );
 
   return (
     <div className={styles.container}>
-      {/* grid of 18 (4 rows × 5 cols = 20, but we leave one slot blank) */}
-      <div className={styles.grid}>
-        {rows.map(d => (
+      <div
+        className={styles.grid}
+        style={{
+          "--small-radar": `${smallSize}px`,
+          "--radar-gap":   `${gap}px`,
+        }}
+      >
+        {visibleRows.map(d => (
           <RadarSVG
             key={d.area}
             data={d}
             size={smallSize}
             onClick={() => setSelectedRegion(+d.area)}
-            selected={+d.area === selected}
           />
         ))}
       </div>
 
-      {/* big radar on the right */}
       <div className={styles.bigChart}>
-        {rows.length && (
+        {!!rows.length && (
           <RadarSVG
             key={selected}
             data={rows.find(d => +d.area === selected) || rows[0]}
