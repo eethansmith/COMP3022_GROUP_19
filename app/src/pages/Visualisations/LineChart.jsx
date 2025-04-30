@@ -6,7 +6,8 @@ const LineChart = ({
   dataUrl,
   selectedRegion,
   setSelectedRegion,
-  className,
+  className = '',
+  style = {},
 }) => {
   const containerRef = useRef(null);
   const [data, setData] = useState([]);
@@ -109,7 +110,7 @@ const LineChart = ({
     <div
       ref={containerRef}
       className={className}
-      style={{ width: '100%', height: '100%' }}
+      style={style}
     />
   );
 };

@@ -63,7 +63,12 @@ function RadarSVG({ data, size = 120, onClick, selected = false }) {
   );
 }
 
-const RadarGraph = ({ selectedRegion, setSelectedRegion }) => {
+const RadarGraph = ({ 
+  selectedRegion, 
+  setSelectedRegion,
+  smallSize =75,
+  bigSize =200,
+}) => {
   const [rows, setRows] = useState([]);  
   const [selected, setSelected] = useState(null);
 
@@ -88,6 +93,7 @@ const RadarGraph = ({ selectedRegion, setSelectedRegion }) => {
           <RadarSVG
             key={d.area}
             data={d}
+            size={smallSize}
             onClick={() => setSelectedRegion(+d.area)}
             selected={+d.area === selected}
           />
@@ -100,7 +106,7 @@ const RadarGraph = ({ selectedRegion, setSelectedRegion }) => {
           <RadarSVG
             key={selected}
             data={rows.find(d => +d.area === selected) || rows[0]}
-            size={260}
+            size={bigSize}
             selected
           />
         )}

@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import * as d3 from 'd3';
 import styles from './Rescue.module.css';
-import ShakeMap from '../../Visualisations/ShakeMap';
+
 import LineChart from '../../Visualisations/LineChart';
+import ShakeMap from '../../Visualisations/ShakeMap';
 import RadarGraph from '../../Visualisations/RadarGraph';
+import SplitRow from '../../../components/SplitRow';
+
 import geoJson from '../../../assets/geojson/StHimark.geo.json';
 
 const Rescue = () => {
@@ -32,37 +35,29 @@ const Rescue = () => {
           emergency response.
         </p>
       </div>
-      {/* ─── Main content: left/right flex panels ───────────────────────── */}
-      <div className={styles.content}>
 
-        {/* Left panel: big line chart */}
-        <div className={styles.leftPanel}>
-        <LineChart
-          dataUrl='/data/resources/rescue-service-timeline.csv'
-          selectedRegion={selectedRegion}
-          setSelectedRegion={setSelectedRegion}
-          className={styles.lineChart}
-        />
+      <main className={styles.content}>
+        <SplitRow leftWidth='50%' rightWidth='50%' height='70%'>
+          <LineChart
+            dataUrl='/data/resources/rescue-service-timeline.csv'
+            selectedRegion={selectedRegion}
+            setSelectedRegion={setSelectedRegion}
+          />
+          <ShakeMap
+            data={geoJson}
+            scoresMap={scoresMap}
+            selectedRegion={selectedRegion}
+            setSelectedRegion={setSelectedRegion}
+          />
+        </SplitRow>
+        <div className={styles.radarContainer}>
           <RadarGraph                    
             className={styles.radarGraph}
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
           />
         </div>
-
-        {/* Right panel: top=map, bottom=radar */}
-        <div className={styles.rightPanel}>
-          <div className={styles.mapContainer}>
-          <ShakeMap
-            data={geoJson}
-            scoresMap={scoresMap}
-            selectedRegion={selectedRegion}
-            setSelectedRegion={setSelectedRegion}
-            className={styles.mapChart}  // no width/height props any more
-          />
-          </div>
-        </div>
-      </div>
+      </main>
     </div>
   );
 };
