@@ -1,49 +1,47 @@
-### 1. Load data ####################################################
+####################################################################
+#  Multi-service earthquake-response priority scores   (base R)
+#  Generates: rescue-priority.csv, medical-priority.csv,
+#             utilities-priority.csv, traffic-priority.csv
+####################################################################
+
+### 1. Load data ----------------------------------------------------
 df <- read.csv(
-  "data/resources/mc1-report-data-hourly-rounded.csv",
+  "data/resources/mc1-report-data-processed.csv",
   stringsAsFactors = FALSE
 )
 
-### 2. Define weight sets ###########################################
-w_rescue <- c(
-  buildings        = 0.70,
-  medical          = 0.10,
-  roads_and_bridges= 0.05,
-  power            = 0.05,
-  shake_intensity  = 0.10
-)
-
-w_medical <- c(
-  medical          = 0.55,
-  buildings        = 0.15,
-  roads_and_bridges= 0.15,
-  power            = 0.05,
-  shake_intensity  = 0.10
-)
-
-w_utilities <- c(
-  power            = 0.40,
-  sewer_and_water  = 0.35,
-  roads_and_bridges= 0.15,
-  shake_intensity  = 0.10
-)
-
-w_traffic <- c(
-  roads_and_bridges= 0.60,
-  sewer_and_water  = 0.10,
-  power            = 0.05,
-  buildings        = 0.05,
-  shake_intensity  = 0.10
-)
-
+### 2. Weight definitions ------------------------------------------
 weight_sets <- list(
-  rescue    = w_rescue,
-  medical   = w_medical,
-  utilities = w_utilities,
-  traffic   = w_traffic
+  rescue = c(
+    buildings        = 0.70,
+    medical          = 0.10,
+    roads_and_bridges= 0.05,
+    power            = 0.05,
+    shake_intensity  = 0.10
+  ),
+  medical = c(
+    medical          = 0.55,
+    buildings        = 0.15,
+    roads_and_bridges= 0.15,
+    power            = 0.05,
+    shake_intensity  = 0.10
+  ),
+  utilities = c(
+    power            = 0.40,
+    sewer_and_water  = 0.35,
+    roads_and_bridges= 0.15,
+    shake_intensity  = 0.10
+  ),
+  traffic = c(
+    roads_and_bridges= 0.60,
+    sewer_and_water  = 0.15,
+    buildings        = 0.10,
+    power            = 0.05,
+    shake_intensity  = 0.10
+  )
 )
 
-### 3. Helper functions #############################################
+### 3. Helper functions --------------------------------------------
 row_weighted_mean <- function(x, w_vec) {
   good <- !is.na(x)
   if (!any(good)) return(NA_real_)
@@ -53,17 +51,18 @@ row_weighted_mean <- function(x, w_vec) {
 calc_priority <- function(df_in, w) {
 
   # 3a – per-report severity ---------------------------------------
-  needed <- names(w)
+  needed  <- names(w)
   missing <- setdiff(needed, names(df_in))
   if (length(missing))
-    stop("Missing columns: ", paste(missing, collapse = ", "))
+    stop("Data missing columns: ", paste(missing, collapse = ", "))
 
   sev <- apply(df_in[ needed ], 1, row_weighted_mean, w_vec = w)
 
   # 4 – aggregate by location --------------------------------------
   agg <- aggregate(
     sev ~ location,
-    FUN = function(x) c(
+    data = data.frame(location = df_in$location, sev = sev),
+    FUN  = function(x) c(
       n  = length(x),
       mn = mean(x, na.rm = TRUE),
       sd = sd(x,   na.rm = TRUE)
@@ -88,18 +87,22 @@ calc_priority <- function(df_in, w) {
   # 6 – rescale 0-to-10 & round ------------------------------------
   rng <- range(loc$adjusted)
   loc$rating <- round(
-    10 * (loc$adjusted - rng[1]) / diff(rng), 2
+    10 * (loc$adjusted - rng[1]) / diff(rng),
+    2
   )
 
   loc[ order(-loc$rating), ]
 }
 
-### 4. Run for each service & save ##################################
+### 4. Run for each service & save ---------------------------------
 out_dir <- "app/public/data/resources"
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 for (svc in names(weight_sets)) {
-  out_file <- file.path(out_dir, paste0(svc, "-priority.csv"))
   loc_stats <- calc_priority(df, weight_sets[[svc]])
-  write.csv(loc_stats, out_file, row.names = FALSE)
+  write.csv(
+    loc_stats,
+    file.path(out_dir, paste0(svc, "-priority.csv")),
+    row.names = FALSE
+  )
 }
