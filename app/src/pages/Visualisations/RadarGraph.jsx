@@ -1,96 +1,60 @@
-// src/Visualisations/RadarGraph.jsx
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import * as d3 from "d3";
-import styles from "./RadarGraph.module.css";
+import RadarSVG from "./RadarSVG";
+import styles  from "./RadarGraph.module.css";
 
-/* ─── metrics in the CSV, fixed order ───────────────────────── */
-const METRICS = [
-  "sewer_and_water",
-  "power",
-  "roads_and_bridges",
-  "medical",
-  "buildings",
-  "shake_intensity",
-];
+const AREA_NAME = {
+  1 : "Palace Hills",
+  2 : "Northwest",
+  3 : "Old Town",
+  4 : "Safe Town",
+  5 : "Southwest",
+  6 : "Downtown",
+  7 : "Wilson Forest",
+  8 : "Scenic Vista",
+  9 : "Broadview",
+ 10 : "Chapparal",
+ 11 : "Terrapin Springs",
+ 12 : "Pepper Mill",
+ 13 : "Cheddarford",
+ 14 : "Easton",
+ 15 : "Weston",
+ 16 : "Southton",
+ 17 : "Oak Willow",
+ 18 : "East Parton",
+ 19 : "West Parton"
+};
 
-/* ─── reusable radar SVG ────────────────────────────────────── */
-function RadarSVG({ data, size = 120, onClick, selected = false }) {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (!data) return;
-
-    const R   = size / 2 - 4;                  // outer radius
-    const k   = METRICS.length;
-    const ang = (_, i) => (i / k) * 2 * Math.PI;
-
-    const r = d3.scaleLinear().domain([0, 1]).range([0, R]);
-
-    const pts = METRICS.map((m, i) => {
-      const a = ang(null, i) - Math.PI / 2;
-      const s = r(data[`${m}_score`]);
-      return [R + s * Math.cos(a), R + s * Math.sin(a)];
-    });
-
-    const svg = d3.select(ref.current);
-    svg.selectAll("*").remove();               // clear
-
-    svg.append("polygon")                      // filled shape
-      .attr("points", pts.map(p => p.join(",")).join(" "))
-      .attr("class", selected ? styles.bigFill : styles.smallFill);
-
-    svg.selectAll(".axis")                     // axes
-      .data(METRICS)
-      .enter()
-      .append("line")
-      .attr("class", styles.axis)
-      .attr("x1", R).attr("y1", R)
-      .attr("x2", (_, i) => R + r(1) * Math.cos(ang(null, i) - Math.PI / 2))
-      .attr("y2", (_, i) => R + r(1) * Math.sin(ang(null, i) - Math.PI / 2));
-
-    svg.append("title").text(`Area ${data.area}`);
-  }, [data, size, selected]);
-
-  return (
-    <svg
-      ref={ref}
-      width={size}
-      height={size}
-      onClick={onClick}
-      className={selected ? styles.bigSvg : styles.smallSvg}
-    />
-  );
-}
-
-/* ─── main component ────────────────────────────────────────── */
 const RadarGraph = ({
   selectedRegion,
   setSelectedRegion,
   smallSize = 75,
-  gap       = 8,          // px – keep in sync with CSS --radar-gap
+  gap       = 8,
 }) => {
   const [rows, setRows]     = useState([]);
   const [selected, setSel]  = useState(null);
 
-  /* load CSV once */
+  const colourFn = useMemo(
+    () => d3.scaleSequential(d3.interpolateYlGnBu).domain([0, 1]),
+    []
+  );
+
   useEffect(() => {
     d3.csv("/data/resources/radar-graph-areas.csv", d3.autoType).then(all => {
       all.sort((a, b) => d3.ascending(+a.area, +b.area));
+      all.forEach(d => { d.Nbrhood = AREA_NAME[d.area]; });   // ← add name
       setRows(all);
       if (!selectedRegion) setSelectedRegion(+all[0].area);
     });
   }, []);
 
-  /* keep local state in sync with parent */
   useEffect(() => setSel(selectedRegion), [selectedRegion]);
 
-  /* 18 small radars (remove the selected one) */
   const visibleRows = useMemo(
     () => rows.filter(d => +d.area !== selected),
     [rows, selected]
   );
 
-  /* big radar = height of 3 rows + 2 gaps */
   const bigSize = useMemo(
     () => smallSize * 3 + gap * 2,
     [smallSize, gap]
@@ -106,12 +70,20 @@ const RadarGraph = ({
         }}
       >
         {visibleRows.map(d => (
-          <RadarSVG
+          <div
             key={d.area}
-            data={d}
-            size={smallSize}
+            className={styles.item}
             onClick={() => setSelectedRegion(+d.area)}
-          />
+          >
+            <RadarSVG
+              data={d}
+              size={smallSize}
+              colourFn={colourFn}
+              showAxes={false}
+              showLabels={false}
+            />
+            <span className={styles.caption}>{AREA_NAME[d.area]}</span>
+          </div>
         ))}
       </div>
 
@@ -122,6 +94,10 @@ const RadarGraph = ({
             data={rows.find(d => +d.area === selected) || rows[0]}
             size={bigSize}
             selected
+            colourFn={colourFn}
+            showAxes={true}
+            showLabels={true}
+            showVertices={true} 
           />
         )}
       </div>

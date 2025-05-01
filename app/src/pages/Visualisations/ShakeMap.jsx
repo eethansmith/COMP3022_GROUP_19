@@ -36,9 +36,6 @@ export default function ShakeMap({
     const g = svg.append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    /* ------------------------------------------------------------------ */
-    /*  Map                                                                */
-    /* ------------------------------------------------------------------ */
     g.selectAll("path")
       .data(data.features)
       .enter()
@@ -48,8 +45,7 @@ export default function ShakeMap({
         const v = scoresMap.get(+d.properties.Id);
         return v != null ? scale(v) : "#ccc";
       })
-      /* simple highlight: thin black outline for selected,             */
-      /* normal 0.5-px white outline for everything else                */
+
       .attr("stroke",   d => (+d.properties.Id === selectedRegion ? "#000" : "#fff"))
       .attr("stroke-width", d => (+d.properties.Id === selectedRegion ? 1    : 0.5))
       .style("cursor", "pointer")
@@ -57,9 +53,6 @@ export default function ShakeMap({
       .on("mouseover", function () { d3.select(this).attr("opacity", 0.7); })
       .on("mouseout",  function () { d3.select(this).attr("opacity", 1);  });
 
-    /* ------------------------------------------------------------------ */
-    /*  Legend                                                             */
-    /* ------------------------------------------------------------------ */
     const legendWidth = 160;
     const legendScale = d3.scaleLinear().domain([0, 10]).range([0, legendWidth]);
 
@@ -91,9 +84,6 @@ export default function ShakeMap({
           .tickFormat(d3.format(".1f"))
       );
 
-    /* ------------------------------------------------------------------ */
-    /*  Movable marker line (no arrow head)                               */
-    /* ------------------------------------------------------------------ */
     const selectedScore = selectedRegion != null ? scoresMap.get(selectedRegion) : null;
     if (selectedScore != null) {
       const x = legendScale(selectedScore);
@@ -101,12 +91,11 @@ export default function ShakeMap({
       legend.append("line")
         .attr("x1", x)
         .attr("x2", x)
-        .attr("y1", -4)   // a little above the gradient bar
-        .attr("y2", 10)   // down to the bottom of the bar
+        .attr("y1", -4)  
+        .attr("y2", 10)   
         .attr("stroke", "#000")
         .attr("stroke-width", 2);
     }
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [data, scoresMap, selectedRegion, scale]);
 
   return (
