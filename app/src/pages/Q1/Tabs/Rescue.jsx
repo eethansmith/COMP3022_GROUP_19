@@ -43,15 +43,16 @@ const Rescue = () => {
     <div className={styles.wrapper}>
       <div className={styles.header}>
         <p>
-          This dashboard shows which areas have been most impacted by building damage during the earthquake,
-          based on resident reports. These are the locations where the risk to life is highest and where
-          Rescue Services are most urgently needed.
+        This dashboard shows which areas need rescue services most urgently, based on 
+        thousands of resident reports submitted during the earthquake. Each report is 
+        scored using a weighted formula that prioritises building damage (70%), alongside 
+        medical emergencies, road blockages, power outages, and shaking intensity. These 
+        scores are averaged for every 3-hour period in each location.
         </p>
         <p>
-          Severity scores are calculated using a weighted formula: 70% building damage and 30% shake
-          intensity, averaged across all reports for each area. To emphasise urgency, the final score for
-          each location is scaled by a factor of 2, highlighting zones that should be prioritised for
-          emergency response.
+        To ensure fairness, areas with fewer reports are adjusted using national averages for that time, 
+        so no location is over- or under-represented. This creates a reliable timeline of severity across 
+        all regions, helping rescue teams focus efforts where the risk to life is highest.
         </p>
       </div>
 
@@ -69,7 +70,7 @@ const Rescue = () => {
             setSelectedRegion={setSelectedRegion}
           />
         </SplitRow>
-        <SplitRow leftWidth="50%" rightWidth="50%" height="25%">
+        <SplitRow leftWidth="60%" rightWidth="40%" height="25%">
           <RadarGraph
             className={styles.radarGraph}
             selectedRegion={selectedRegion}
