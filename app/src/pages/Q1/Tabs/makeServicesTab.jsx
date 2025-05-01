@@ -1,28 +1,27 @@
 import React from "react";
 import ServicesDashboard from "./ServicesDashboard";
 
-/**
- * Factory that returns a <ServicesDashboard /> configured for one service.
- * Valid slugs: "rescue" | "medical" | "utilities" | "traffic"
- */
 export default function makeServiceTab(slug) {
   /* ---------- explanatory copy for the header ---------- */
   const copyMap = {
     rescue: [
-      "This dashboard shows which areas need rescue services most urgently, based on thousands of resident reports submitted during the earthquake. Each report is scored using a weighted formula that prioritises building damage (70%), alongside medical emergencies, road blockages, power outages, and shaking intensity.",
-      "To ensure fairness, areas with fewer reports are adjusted using national averages for that time, so no location is over- or under-represented. This creates a reliable timeline of severity across all regions, helping rescue teams focus efforts where the risk to life is highest."
+      "Every citizen report is converted to a single ‘rescue-severity’ score using a weighted mean: building damage 70 %, medical emergencies 10 %, roads & bridges 5 %, power outages 5 %, and a 10 % physics check from shake-intensity.  Missing answers are ignored and the remaining weights are renormalised, so partial reports still count.",
+      "Location averages are then empirically-Bayes-shrunken toward the national mean, protecting rural districts with only a handful of reports from wild statistical swings.  Finally, scores are rescaled to a 0–10 index: 10 = worst hit.  The hotspots you see are therefore the places where trapped or injured people are most likely and where rescue teams should be dispatched first."
     ],
+  
     medical: [
-      "This dashboard highlights neighbourhoods with the highest concentration of medical emergencies following the quake. Incoming citizen reports are weighted toward life-threatening injuries, trapped victims and collapsing healthcare facilities.",
-      "An adjustment layer evens out areas with sparse data so field hospitals and ambulance crews can be staged where they will save the most lives."
+      "For medical-response scoring the weight vector shifts: injuries and health-related distress carry 55 %, followed by damaged buildings 15 %, blocked roads 15 %, grid failure 5 %, and the same 10 % shake-intensity anchor.  The identical row-by-row weighted-mean formula turns every report into a comparable ‘medical severity’ value.",
+      "As with rescue, small-sample districts are shrink-adjusted toward the national average before being stretched onto the 0–10 scale.  The darkest areas mark the greatest expected surge in casualties and the highest likelihood of hospitals or clinics being offline — prime zones for field hospitals, triage posts and ambulance staging."
     ],
+  
     utilities: [
-      "This dashboard prioritises regions suffering power cuts, burst water mains and gas leaks. Scores blend outage duration, population affected and proximity to critical infrastructure.",
-      "Utility crews can use the timeline to position repair teams and restore essential services quicker."
+      "Utility priority flips the emphasis to lifeline infrastructure: power disruption 40 %, sewer & water failures 35 %, road damage 15 %, plus 10 % shake-intensity.  Each report becomes a utilities-severity score by the same weighted-mean rule of thumb.",
+      "Shrinkage for uneven report counts and the 0–10 rescale follow exactly the rescue model.  High-rating districts are where prolonged blackouts, water loss or gas-main breaks will most jeopardise public health; restoration crews targeting these sectors first will restore essential services to the largest at-risk population fastest."
     ],
+  
     traffic: [
-      "This dashboard analyses road-blockage and traffic-flow reports. Obstructions (collapsed bridges, debris, sinkholes) are weighted more heavily than congestion.",
-      "Transport authorities can plan detours and clear bottlenecks, ensuring emergency vehicles reach the hardest-hit areas."
+      "Traffic-control scoring targets mobility: roads & bridges damage 60 %, sewer/water flooding 15 %, debris from buildings 10 %, power-dependent signalling 5 %, and 10 % shake-intensity.  The same weighted-mean → shrinkage → 0-to-10 pipeline produces a blockage severity for each location.",
+      "Regions tinted deep red are statistically the most obstructed routes for emergency vehicles and supply convoys.  Clearing debris, repairing bridges or setting up detours in these zones first keeps relief operations — and the economy — moving."
     ]
   };
 
@@ -34,12 +33,12 @@ export default function makeServiceTab(slug) {
     traffic:   ["#F7F4FF", "#5D32B3"]  // very pale lilac → purple
   };
 
-  const stem = `/data/resources/${slug}-service`;
+  const stem = `/data/resources/${slug}`;
 
   return (
     <ServicesDashboard
       priorityCsv={`${stem}-priority.csv`}
-      timelineCsv={`${stem}-timeline.csv`}
+      timelineCsv={`${stem}-service-timeline.csv`}
       blurb={copyMap[slug]}
       colorRange={colorMap[slug]}
     />
