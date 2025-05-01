@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import * as d3 from "d3";
 
 import SplitRow   from "../../../components/SplitRow";
@@ -7,22 +7,33 @@ import ShakeMap   from "../../Visualisations/ShakeMap";
 import RadarGraph from "../../Visualisations/RadarGraph";
 import BarChart   from "../../Visualisations/BarChart";
 
-import geoJson    from "../../../assets/geojson/StHimark.geo.json";
-import styles     from "./ServicesDashboard.module.css";
+import geoJson from "../../../assets/geojson/StHimark.geo.json";
+import styles  from "./ServicesDashboard.module.css";
 
 /**
- * Generic dashboard used by every emergency-service tab.
- *
- * @param {string} priorityCsv – path to “…-priority.csv”
- * @param {string} timelineCsv – path to “…-timeline.csv”
- * @param {string[]} blurb     – paragraphs that appear above the charts
+ * Re-usable dashboard that drives every emergency-service tab.
  */
-export default function ServicesDashboard({ priorityCsv, timelineCsv, blurb }) {
+export default function ServicesDashboard({
+  priorityCsv,
+  timelineCsv,
+  blurb,
+  colorRange = ["#ffffff", "#ff0000"] // <-- fallback if nothing passed
+}) {
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [scoresMap,      setScoresMap]      = useState(new Map());
   const [scoresData,     setScoresData]     = useState([]);
 
-  /* --- fetch and enrich the “priority” CSV whenever its path changes --- */
+  /* ---------- shared colour scale (min 0, max 10) ---------- */
+  const colorScale = useMemo(
+    () =>
+      d3.scaleLinear()
+        .domain([0, 10])
+        .range(colorRange)
+        .clamp(true),
+    [colorRange]
+  );
+
+  /* ---------- load & enrich the priority CSV ---------- */
   useEffect(() => {
     d3.csv(priorityCsv, d3.autoType)
       .then(rows => {
@@ -49,9 +60,7 @@ export default function ServicesDashboard({ priorityCsv, timelineCsv, blurb }) {
   return (
     <div className={styles.wrapper}>
       <div className={styles.header}>
-        {blurb.map((text, i) => (
-          <p key={i}>{text}</p>
-        ))}
+        {blurb.map((txt, i) => <p key={i}>{txt}</p>)}
       </div>
 
       <main className={styles.content}>
@@ -60,12 +69,14 @@ export default function ServicesDashboard({ priorityCsv, timelineCsv, blurb }) {
             dataUrl={timelineCsv}
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
+            colorScale={colorScale}
           />
           <ShakeMap
             data={geoJson}
             scoresMap={scoresMap}
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
+            colorScale={colorScale}
           />
         </SplitRow>
 
@@ -74,11 +85,13 @@ export default function ServicesDashboard({ priorityCsv, timelineCsv, blurb }) {
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
             scoresMap={scoresMap}
+            colorScale={colorScale}
           />
           <BarChart
             data={scoresData}
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
+            colorScale={colorScale}
           />
         </SplitRow>
       </main>
