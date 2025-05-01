@@ -9,19 +9,15 @@ export default function ShakeMap({
   scoresMap,
   selectedRegion,
   setSelectedRegion,
-  colorScale,            // <-- new prop
+  colorScale,
   className,
   ...props
 }) {
   const svgRef = useRef(null);
 
-  // fall back to a built-in scale if parent forgets to send one
   const scale =
     colorScale ||
-    d3.scaleLinear()
-      .domain([0, 10])
-      .range(["#FFFBEA", "#8B0000"])
-      .clamp(true);
+    d3.scaleLinear().domain([0, 10]).range(["#FFFBEA", "#8B0000"]).clamp(true);
 
   useEffect(() => {
     if (!data || !scoresMap) return;
@@ -37,12 +33,12 @@ export default function ShakeMap({
     const projection = d3.geoMercator().fitSize([innerWidth, innerHeight], data);
     const path = d3.geoPath().projection(projection);
 
-    const g = svg.append("g").attr(
-      "transform",
-      `translate(${margin.left},${margin.top})`
-    );
+    const g = svg.append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    /* --- neighbourhood shapes --- */
+    /* ------------------------------------------------------------------ */
+    /*  Map                                                                */
+    /* ------------------------------------------------------------------ */
     g.selectAll("path")
       .data(data.features)
       .enter()
@@ -52,14 +48,18 @@ export default function ShakeMap({
         const v = scoresMap.get(+d.properties.Id);
         return v != null ? scale(v) : "#ccc";
       })
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 0.5)
+      /* simple highlight: thin black outline for selected,             */
+      /* normal 0.5-px white outline for everything else                */
+      .attr("stroke",   d => (+d.properties.Id === selectedRegion ? "#000" : "#fff"))
+      .attr("stroke-width", d => (+d.properties.Id === selectedRegion ? 1    : 0.5))
       .style("cursor", "pointer")
       .on("click", (_, d) => setSelectedRegion(+d.properties.Id))
       .on("mouseover", function () { d3.select(this).attr("opacity", 0.7); })
-      .on("mouseout",  function () { d3.select(this).attr("opacity", 1); });
+      .on("mouseout",  function () { d3.select(this).attr("opacity", 1);  });
 
-    /* --- simple legend --- */
+    /* ------------------------------------------------------------------ */
+    /*  Legend                                                             */
+    /* ------------------------------------------------------------------ */
     const legendWidth = 160;
     const legendScale = d3.scaleLinear().domain([0, 10]).range([0, legendWidth]);
 
@@ -90,8 +90,24 @@ export default function ShakeMap({
           .tickSize(6)
           .tickFormat(d3.format(".1f"))
       );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, scoresMap, selectedRegion, setSelectedRegion, scale]);
+
+    /* ------------------------------------------------------------------ */
+    /*  Movable marker line (no arrow head)                               */
+    /* ------------------------------------------------------------------ */
+    const selectedScore = selectedRegion != null ? scoresMap.get(selectedRegion) : null;
+    if (selectedScore != null) {
+      const x = legendScale(selectedScore);
+
+      legend.append("line")
+        .attr("x1", x)
+        .attr("x2", x)
+        .attr("y1", -4)   // a little above the gradient bar
+        .attr("y2", 10)   // down to the bottom of the bar
+        .attr("stroke", "#000")
+        .attr("stroke-width", 2);
+    }
+  /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [data, scoresMap, selectedRegion, scale]);
 
   return (
     <svg
@@ -109,6 +125,6 @@ ShakeMap.propTypes = {
   scoresMap:         PropTypes.instanceOf(Map).isRequired,
   selectedRegion:    PropTypes.any,
   setSelectedRegion: PropTypes.func.isRequired,
-  colorScale:        PropTypes.func, // ← new
+  colorScale:        PropTypes.func,
   className:         PropTypes.string
 };
