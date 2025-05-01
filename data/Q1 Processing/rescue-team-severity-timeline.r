@@ -1,10 +1,6 @@
-###############################################################################
-## Build a 3-hour earthquake-severity timeline for 19 areas – BASE R ONLY   ##
-###############################################################################
-
 # ---------- parameters --------------------------------------------------------
 infile  <- "data/resources/mc1-report-data-processed.csv"   # raw file
-outfile <- "app/public/data/resources/rescue-team-severity-timeline.csv"           # final output
+outfile <- "app/public/data/resources/rescue-team-timeline.csv"           # final output
 tz_data <- "UTC"
 # ---------- 1. load -----------------------------------------------------------
 raw <- read.csv(infile, stringsAsFactors = FALSE)

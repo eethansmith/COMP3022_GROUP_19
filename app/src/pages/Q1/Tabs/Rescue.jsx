@@ -5,20 +5,39 @@ import styles from './Rescue.module.css';
 import LineChart from '../../Visualisations/LineChart';
 import ShakeMap from '../../Visualisations/ShakeMap';
 import RadarGraph from '../../Visualisations/RadarGraph';
+import BarChart from '../../Visualisations/BarChart';
 import SplitRow from '../../../components/SplitRow';
 
 import geoJson from '../../../assets/geojson/StHimark.geo.json';
 
 const Rescue = () => {
   const [selectedRegion, setSelectedRegion] = useState(null);
-  const [scoresMap,     setScoresMap]     = useState(new Map());
+  const [scoresMap,  setScoresMap]  = useState(new Map());
+  const [scoresData, setScoresData] = useState([]); 
+
 
   useEffect(() => {
     const csvUrl = '/data/resources/rescue-service-priority.csv';
     d3.csv(csvUrl, d3.autoType)
-      .then(rows => setScoresMap(new Map(rows.map(r => [+r.location, +r.priorityScore]))))
-      .catch(err => console.error(err));
+      .then(rows => {
+        // pull name out of geoJson.features
+        const enriched = rows.map(r => {
+          const feat = geoJson.features.find(f => +f.properties.Id === +r.location);
+          return {
+            id:       r.location,
+            name:     feat?.properties?.Nbrhood ?? `#${r.location}`,
+            rating:   r.rating,
+            n:        r.n,
+            mean_sev: r.mean_sev,
+            adjusted: r.adjusted
+          };
+        });
+        setScoresData(enriched);
+        setScoresMap(new Map(enriched.map(d => [d.id, d.rating])));
+      })
+      .catch(console.error);
   }, []);
+  
 
   return (
     <div className={styles.wrapper}>
@@ -50,13 +69,20 @@ const Rescue = () => {
             setSelectedRegion={setSelectedRegion}
           />
         </SplitRow>
-        <div className={styles.radarContainer}>
-          <RadarGraph                    
+        <SplitRow leftWidth="50%" rightWidth="50%" height="25%">
+          <RadarGraph
             className={styles.radarGraph}
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
+            scoresMap={scoresMap}
           />
-        </div>
+          <BarChart
+            className={styles.barChart}
+            data={scoresData}
+            selectedRegion={selectedRegion}
+            setSelectedRegion={setSelectedRegion}
+          />
+        </SplitRow>
       </main>
     </div>
   );
