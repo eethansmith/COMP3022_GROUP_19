@@ -165,6 +165,11 @@ Show how report variance changes pre-quake, during quake and post quake.
 
 ![image](https://github.com/user-attachments/assets/a7ba156f-899e-46b5-a427-e849ddbb53cb)
 
+##Question 3 Visualisation Sketch
+
+![image](https://github.com/user-attachments/assets/4df0064d-0b20-4c1c-b83b-bca184a9bf5e)
+
+
 
 
 # Fianl Deliverables
