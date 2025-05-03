@@ -7,7 +7,7 @@ import UncertaintyByDayTab from "./Tabs/UncertaintyByDayTab";
  * Creates a tab for the day specified
  * @param {string} day 
  */
-const DayTabFactory = (day, i, arr) => TabFactory(`Day ${day}`, <UncertaintyByDayTab day={day} />)
+const DayTabFactory = (day, ..._) => TabFactory(`Day ${day}`, <UncertaintyByDayTab day={day} />)
 
 const Question3 = () => {
 
