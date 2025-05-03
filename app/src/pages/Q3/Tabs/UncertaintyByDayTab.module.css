@@ -1,0 +1,20 @@
+.grid-container {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 1rem;
+}
+
+.grid-container > div {
+    width: auto;
+    height: auto;
+    min-height: 300px;
+    padding: 10px;
+    border: 1px solid black;
+    border-radius: 10px;
+}
+
+.line-graph {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+}
