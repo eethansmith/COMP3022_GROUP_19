@@ -5,7 +5,7 @@
     gap: 1rem;
 }
 
-.grid-container > div {
+.grid-item {
     width: auto;
     height: auto;
     min-height: 300px;
@@ -14,7 +14,7 @@
     border-radius: 10px;
 }
 
-.line-graph {
+.line-chart-container {
     grid-column: 2;
     grid-row: 1 / span 2;
 }
