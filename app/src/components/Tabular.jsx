@@ -2,7 +2,7 @@ import { useState } from 'react';
 import styles from "./Tabular.module.css";
 
 // Tab Factory for creating tabs
-export const createTab = (header, content) => ({header, content});
+export const TabFactory = (header, content) => ({header, content});
 
 // The tabular view itself
 const Tabular = ({ tabs }) => {

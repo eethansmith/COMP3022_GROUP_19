@@ -1,6 +1,6 @@
 import React from "react";
 import Header from "../../components/Header";
-import Tabular, { createTab } from "../../components/Tabular";
+import Tabular, { TabFactory } from "../../components/Tabular";
 import styles from "./Q1.module.css";
 
 import makeServicesTab from "./Tabs/makeServicesTab";
@@ -13,7 +13,7 @@ const services = [
   ];
   
   const tabs = services.map(({ label, slug }) =>
-    createTab(label, makeServicesTab(slug))
+    TabFactory(label, makeServicesTab(slug))
   );
   
   export default function Question1() {
