@@ -1,0 +1,67 @@
+/* src/Visualisations/RadarGraph.module.css */
+:root {
+    --small-radar: 75px;   /* default – overridden inline from React */
+    --radar-gap:   8px;
+  }
+  
+  /* ─── layout ────────────────────────────────────────────────── */
+  .container {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(6, var(--small-radar));
+    grid-auto-rows: var(--small-radar);
+    gap: var(--radar-gap);
+  }
+  
+  .bigChart {
+    display: flex;
+    align-items: center;   /* vertically centre large SVG */
+  }
+  
+  /* ─── SVG styling ───────────────────────────────────────────── */
+  .smallSvg { cursor: pointer; }
+  .bigSvg   { cursor: default;  }
+  
+  .smallFill { fill: steelblue;  fill-opacity: .35; stroke: steelblue; stroke-width: 1; }
+  .bigFill   { fill: orange;     fill-opacity: .4;  stroke: orange;    stroke-width: 2; }
+
+  /* each mini radar + caption acts like a <figure> */
+  .item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* neighbourhood name under each mini radar */
+  .caption {
+    margin-top: 2px;
+    font-size: 0.65rem;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  /* label text inside the big SVG */
+  .metricLabel {
+    fill: #333;
+    font-weight: 600;
+    pointer-events: none;
+  }
+
+  /* optional: thin grey spokes on the big chart */
+  .axis {
+    stroke: #bdbdbd;
+    stroke-width: 0.6;
+  }
+
+  .vertex {
+    fill: #CA6702;     /* same hue as the outline */
+    stroke: #fff;      /* thin white halo so they pop on any background */
+    stroke-width: 0.6;
+    pointer-events: none;
+  }

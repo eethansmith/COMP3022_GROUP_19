@@ -1,0 +1,54 @@
+.container {
+    width: 100%;
+}
+
+.header-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+}
+
+.header-button {
+    padding: 0.5em 1em;
+    font-size: 1rem;
+    width: auto;
+    display: inline-block;
+    box-sizing: border-box;
+    white-space: nowrap;
+    background-color: whitesmoke;
+    color: darkslategray;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border-radius: 10px 10px 0px 0px;
+}
+
+.inactive:hover {
+    background-color: lightgray;
+}
+
+.header-fill {
+    width: 100%;
+    border-bottom: 3px solid black;
+}
+
+.active {
+    border: 3px solid black;
+    border-bottom: none;
+    background-color: white;
+    font-weight: 600;
+    color: black;
+}
+
+
+.inactive {
+    border: 1px solid black;
+    /* border:none; */
+    border-bottom: 3px solid black;
+}
+
+.content {
+    padding: 10px 25px 25px 25px;
+    border: 3px solid black;
+    border-top: none;
+    border-radius: 0px 0px 20px 20px;
+}

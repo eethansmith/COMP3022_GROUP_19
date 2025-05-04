@@ -135,10 +135,42 @@ We can explain how we decided on the formula and how the visualisation will help
 ### Question 3
 #### How do conditions change over time? How does uncertainty in change over time? Describe the key changes you see. 
 
-Conditions changing over time-Scroll bar of time-so its easier for emergency responder to pause and check
+Conditions changing over time-Scroll bar of time-so its easier for emergency responder to pause and check we have 3 days, 6 - 8th april, so new map representations for each day. (i.e. map 1 for april 6 with its own scroll bar, then can click to change the date to april 7 which shows a new map, and 1 map that summarises all data).
 
 19 locations in dataset-refer to example 1-dpst 
 Scroll bar to show how magnitude of earthquake changes based on time
+
+# Change added 17/04/2025
+
+Visualizing Uncertainty
+Shading/Opacity: Lighter color = less reliable (fewer reports or high variance)
+
+Confidence Intervals: On time-series charts to reflect uncertainty 
+
+Tooltip Info: Hover to show data reliability metrics per neighborhood -> when you hover over an area, a graph will show up with uncertainty on the y axis and time on the x, displaying how uncertainty changes over time.
+
+Scroll through time to observe changes in reported damage.
+Overlay shake map intensity with report data.
+
+City Time Series Graph
+
+For each neighborhood:
+X-axis = time (hourly)
+Y-axis = average reported damage level
+Confidence/uncertainty band = shows reliability of reports over time
+
+Uncertainty Over Time
+
+Show how report variance changes pre-quake, during quake and post quake.
+
+![image](https://github.com/user-attachments/assets/a7ba156f-899e-46b5-a427-e849ddbb53cb)
+
+##Question 3 Visualisation Sketch
+
+![image](https://github.com/user-attachments/assets/4df0064d-0b20-4c1c-b83b-bca184a9bf5e)
+
+
+
 
 # Fianl Deliverables
 

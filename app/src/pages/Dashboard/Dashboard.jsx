@@ -14,6 +14,12 @@ const Dashboard = () => {
             >
                 Go to Example Page
             </button>
+            <button
+                className={styles["navigate-button"]}
+                onClick={() => navigate("/Q1")}
+            >
+                Question 1
+            </button>
         </div>
     );
 };

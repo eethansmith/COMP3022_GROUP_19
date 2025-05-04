@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import styles from "./ExamplePage.module.css";
 
-const Dashboard = () => {
+const ExamplePage = () => {
 
     const navigate = useNavigate();
 
@@ -19,4 +19,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+export default ExamplePage;
