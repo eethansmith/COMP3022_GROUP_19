@@ -1,0 +1,39 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+/* ── header text ─────────────────────────── */
+.header {
+  padding: 16px;
+  background: #fafafa;
+  border-bottom: 1px solid #ddd;
+}
+
+/* ── main area ───────────────────────────── */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;     /* SplitRow + radar stack vertically */
+  gap: 16px;
+  padding: 16px;
+  min-height: 0;              /* allow overflow-scroll inside charts */
+}
+
+/* radar graph row */
+.radarContainer {
+  flex: 1;
+  min-height: 0;
+}
+
+.radarContainer > * {
+  width: 100%;
+  height: 100%;
+}
+
+.bar-tooltip {
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
