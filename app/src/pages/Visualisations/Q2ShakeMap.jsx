@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import * as d3 from "d3";
 import PropTypes from "prop-types";
-import RegionDialogBox from "../RegionDialogBox";
+import RegionDialogBox from "./RegionDialogBox";
 
 const margin = { top: 20, right: 20, bottom: 30, left: 40 };
 
@@ -85,8 +85,18 @@ export default function Q2ShakeMap({
 
   return(<div style={{ position: "relative" }}>
     <svg ref={svgRef} className={className} {...props} />
-    <RegionDialogBox data={dialogData} onClose={() => setDialogData(null)} />
+
+
+
+    {/* --------------------- FIX THESE VALUES ----------------------- */}
+    <RegionDialogBox data={null} onClose={() => (null)} />
+
+
+
+      
   </div>);
+
+}
 
 Q2ShakeMap.propTypes = {
   data: PropTypes.object.isRequired,

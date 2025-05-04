@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
 import * as d3 from "d3";
-import Header from "../components/Header";
-import Q2ShakeMap from "../Visualisations/Q2ShakeMap";
+import Header from "../../components/Header";
+import Q2ShakeMap from "../Visualisations/Q2ShakeMap.jsx";
 import Q2BarChart from "../Visualisations/Q2BarChart";
 import styles from "./Q2.module.css";
 
 //Import StHimark map directly
-import geoDataJson from "../assets/geojson/StHimark.geo.json";
+import geoDataJson from "../../assets/geojson/StHimark.geo.json";
+import Table from "../Visualisations/Table.jsx";
 
 const Question2 = () => {
+
   const [geoData, setGeoData] = useState(null);
   const [scoresMap, setScoresMap] = useState(new Map());
   const [selectedRegion, setSelectedRegion] = useState(null);
@@ -36,20 +38,35 @@ const Question2 = () => {
       <Header />
       <h3>Use visual analytics to show uncertainty in the data. Compare the reliability of neighborhood reports.</h3>
 
-      <Q2ShakeMap
-        data={geoData}
-        scoresMap={scoresMap}
-        selectedRegion={selectedRegion}
-        setSelectedRegion={setSelectedRegion}
-        className="w-full h-[600px]"
-      />
+      <div className={styles["grid-container"]}>
 
-      <Q2BarChart
-        scoresMap={scoresMap}
-        selectedRegion={selectedRegion}
-        setSelectedRegion={setSelectedRegion}
-        className="mt-10"
-      />
+        <div className={`${styles["grid-item"]} ${styles["bar-chart-container"]}`}>
+          <Q2BarChart
+            scoresMap={scoresMap}
+            selectedRegion={selectedRegion}
+            setSelectedRegion={setSelectedRegion}
+            className="mt-10"
+          />
+        </div>
+
+        <div className={`${styles["grid-item"]} ${styles["shake-map-container"]}`}>
+          <Q2ShakeMap
+            data={geoData}
+            scoresMap={scoresMap}
+            selectedRegion={selectedRegion}
+            setSelectedRegion={setSelectedRegion}
+            className="w-full h-[600px]"
+          />
+        </div>
+
+        <div className={`${styles["grid-item"]} ${styles["table-container"]}`}>
+          <Table />
+        </div>
+
+      </div>
+
+
+
     </div>
   );
 };
