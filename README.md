@@ -68,6 +68,8 @@ A graph for data points being impact values for a certain hour-standard deviatio
 
 <img width="497" alt="image" src="https://github.com/user-attachments/assets/7edde486-38b9-4c8e-bf9c-4e7cb36bc295" />
 
+![Screenshot 2025-05-04 at 13 35 32](https://github.com/user-attachments/assets/a9c8cd99-13fd-44d7-a0fc-86c9022cba20)
+
 0.0–0.3=Blue Low uncertainty(very consistent reports)
 
 0.3–0.6=Orange	Moderate uncertainty
@@ -168,8 +170,6 @@ Show how report variance changes pre-quake, during quake and post quake.
 ##Question 3 Visualisation Sketch
 
 ![image](https://github.com/user-attachments/assets/4df0064d-0b20-4c1c-b83b-bca184a9bf5e)
-
-
 
 
 # Fianl Deliverables
