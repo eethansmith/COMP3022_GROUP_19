@@ -50,7 +50,7 @@ export default function ShakeMap({
       .attr("stroke-width", d => (+d.properties.Id === selectedRegion ? 1    : 0.5))
       .style("cursor", "pointer")
       .on("click", (_, d) => setSelectedRegion(+d.properties.Id))
-      .on("mouseover", function () { d3.select(this).attr("opacity", 0.7); })
+      .on("mouseover", function () { d3.select(this).attr("opacity", 0.1); })
       .on("mouseout",  function () { d3.select(this).attr("opacity", 1);  });
 
     const legendWidth = 160;

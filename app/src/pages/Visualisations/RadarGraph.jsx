@@ -97,7 +97,8 @@ const RadarGraph = ({
             colourFn={colourFn}
             showAxes={true}
             showLabels={true}
-            showVertices={true} 
+            showVertices={true}
+            style={{ overflow: 'visible' }} 
           />
         )}
       </div>
