@@ -21,45 +21,106 @@ export default function ShakeMap({
 
   useEffect(() => {
     if (!data || !scoresMap) return;
-
+  
     const svgEl = svgRef.current;
     const { width, height } = svgEl.getBoundingClientRect();
-    const innerWidth  = width  - margin.left - margin.right;
-    const innerHeight = height - margin.top  - margin.bottom;
-
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+  
     const svg = d3.select(svgEl);
     svg.selectAll("*").remove();
-
+  
     const projection = d3.geoMercator().fitSize([innerWidth, innerHeight], data);
     const path = d3.geoPath().projection(projection);
-
+  
     const g = svg.append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
+  
+    let hoveredRegion = null;
 
-    g.selectAll("path")
+    // Draw outer boundary (single outline around the entire map)
+    g.append("path")
+      .datum({
+        type: "Feature",
+        geometry: {
+          type: "MultiPolygon",
+          coordinates: data.features.map(f => f.geometry.coordinates).flat(),
+        },
+      })
+      .attr("fill", "none")
+      .attr("stroke", "#000")
+      .attr("stroke-width", 5)
+      .attr("d", path);
+
+  
+    // Draw all regions
+    const regions = g.selectAll("path.region")
       .data(data.features)
       .enter()
       .append("path")
+      .attr("class", "region")
       .attr("d", path)
       .attr("fill", d => {
         const v = scoresMap.get(+d.properties.Id);
         return v != null ? scale(v) : "#ccc";
       })
-
-      .attr("stroke",   d => (+d.properties.Id === selectedRegion ? "#000" : "#fff"))
-      .attr("stroke-width", d => (+d.properties.Id === selectedRegion ? 1    : 0.5))
+      .attr("stroke", "#111")
+      .attr("stroke-width", 0.5)
       .style("cursor", "pointer")
       .on("click", (_, d) => setSelectedRegion(+d.properties.Id))
-      .on("mouseover", function () { d3.select(this).attr("opacity", 0.7); })
-      .on("mouseout",  function () { d3.select(this).attr("opacity", 1);  });
+      .on("mouseover", function (_, d) {
+        hoveredRegion = d;
+        drawOverlayPaths();
+      })
+      .on("mouseout", function () {
+        hoveredRegion = null;
+        drawOverlayPaths();
+      });
+  
+    // Overlay group for selected + hovered outlines
+    const overlay = g.append("g").attr("class", "overlay");
+  
+    function drawOverlayPaths() {
+      overlay.selectAll("*").remove();
+  
+      if (selectedRegion != null) {
+        const selected = data.features.find(
+          f => +f.properties.Id === selectedRegion
+        );
+        if (selected) {
+          overlay.append("path")
+            .attr("d", path(selected))
+            .attr("fill", "none")
+            .attr("stroke", "#000")
+            .attr("stroke-width", 4);
 
+          overlay.append("path")
+            .attr("d", path(selected))
+            .attr("fill", "none")
+            .attr("stroke", "#FFF")
+            .attr("stroke-width", 2);
+        }
+      }
+  
+      if (hoveredRegion != null) {
+        overlay.append("path")
+          .attr("d", path(hoveredRegion))
+          .attr("fill", "none")
+          .attr("stroke", "#FFF")
+          .attr("stroke-width", 2);
+      }
+    }
+  
+    drawOverlayPaths();
+  
+    // Legend remains unchanged
     const legendWidth = 160;
     const legendScale = d3.scaleLinear().domain([0, 10]).range([0, legendWidth]);
-
+  
     const legend = g.append("g")
       .attr("class", "legend")
       .attr("transform", `translate(${innerWidth - legendWidth},20)`);
-
+  
     legend.append("defs")
       .append("linearGradient")
       .attr("id", "gradient")
@@ -69,12 +130,12 @@ export default function ShakeMap({
       .append("stop")
       .attr("offset", d => `${d}%`)
       .attr("stop-color", d => scale(d / 10));
-
+  
     legend.append("rect")
       .attr("width", legendWidth)
       .attr("height", 10)
       .style("fill", "url(#gradient)");
-
+  
     legend.append("g")
       .attr("transform", "translate(0,15)")
       .call(
@@ -83,20 +144,21 @@ export default function ShakeMap({
           .tickSize(6)
           .tickFormat(d3.format(".1f"))
       );
-
+  
     const selectedScore = selectedRegion != null ? scoresMap.get(selectedRegion) : null;
     if (selectedScore != null) {
       const x = legendScale(selectedScore);
-
+  
       legend.append("line")
         .attr("x1", x)
         .attr("x2", x)
-        .attr("y1", -4)  
-        .attr("y2", 10)   
+        .attr("y1", -4)
+        .attr("y2", 10)
         .attr("stroke", "#000")
         .attr("stroke-width", 2);
     }
   }, [data, scoresMap, selectedRegion, scale]);
+  
 
   return (
     <svg

@@ -10,6 +10,7 @@ export default function LineChart({
   dataUrl,
   selectedRegion,
   setSelectedRegion,
+  colorScale,
   aspectRatio = 0.65,
   className  = "",
   style      = {},
@@ -67,10 +68,22 @@ export default function LineChart({
     const seriesData = Array.from(
       d3.group(data, d => d.area),
       ([area, values]) => ({ area, values: values.sort((a,b)=>a.datetime-b.datetime) })
-    );
+    ).sort((a, b) => {
+      if (selectedRegion == null) return 0;
+      if (a.area === selectedRegion) return 1;
+      if (b.area === selectedRegion) return -1;
+      return 0;
+    });
 
-    const color = d3.scaleOrdinal(d3.schemeTableau10)
-                    .domain(seriesData.map(d => d.area));
+    const color = (area => {
+      if (selectedRegion === null || selectedRegion === area)
+        return colorScale(8);
+      else {
+        const c = d3.hsl(colorScale(3));
+        c.s = 0.2;
+        return c.toString();
+      }      
+    });
 
     const line = d3.line()
                    .defined(d => d.severity != null)
@@ -123,36 +136,22 @@ export default function LineChart({
                       .attr("class", "series")
                       .attr("fill", "none")
                       .attr("cursor", "pointer")
-                      .attr("stroke", d => 
-                        selectedRegion == null || selectedRegion === d.area
-                          ? color(d.area)
-                          : (() => {
-                            const c = d3.hsl(color(d.area))
-                            c.s = 0.2;
-                            return c.toString();
-                          })()
-                      )
+                      .attr("stroke", d => color(d.area))
                       .on("click", (_, d) => {
                         setSelectedRegion(prev => (prev === d.area ? null : d.area));
-                      })
-                         // ← numeric
-                      .on("mouseover", function () { d3.select(this).attr("stroke-width", 3); })
-                      .on("mouseout",  function (_, d) {
-                        d3.select(this).attr("stroke-width", selectedRegion === d.area ? 3 : 1.5);
                       }),
         update => update
       )
-      .attr("stroke-width", d => (selectedRegion === d.area ? 5 : 1.5))
-      .attr("stroke", d => 
-        selectedRegion == null || selectedRegion === d.area
-          ? color(d.area)
-          : (() => {
-            const c = d3.hsl(color(d.area))
-            c.s = 0.2;
-            return c.toString();
-          })()
-      )
+      .on("mouseover", function () {
+        d3.select(this).attr("stroke-width", 5);
+      })
+      .on("mouseout", function (_, d) {
+        d3.select(this).attr("stroke-width", selectedRegion === d.area ? 4 : 1.5);
+      })
+      .attr("stroke-width", d => (selectedRegion === d.area ? 4 : 1.5))
+      .attr("stroke", d => color(d.area))
       .attr("d", d => line(d.values));
+                   
   }, [data, width, selectedRegion, setSelectedRegion, aspectRatio]);
 
   return <div ref={containerRef} className={className} style={style} />;

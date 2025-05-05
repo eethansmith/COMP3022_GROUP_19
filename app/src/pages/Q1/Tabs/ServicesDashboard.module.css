@@ -1,7 +1,7 @@
 .wrapper {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: fit-content;
   box-sizing: border-box;
 }
 
@@ -17,7 +17,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;     /* SplitRow + radar stack vertically */
-  gap: 16px;
+  gap: 50px;
   padding: 16px;
   min-height: 0;              /* allow overflow-scroll inside charts */
 }

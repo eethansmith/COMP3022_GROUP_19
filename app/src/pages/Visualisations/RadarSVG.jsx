@@ -31,6 +31,7 @@ function RadarSVG({
   showLabels   = false,
   showVertices = false,
   colourFn,
+  ...props
 }) {
   const ref = useRef(null);
 
@@ -127,6 +128,7 @@ function RadarSVG({
       height={size}
       onClick={onClick}
       className={selected ? styles.bigSvg : styles.smallSvg}
+      {...props}
     />
   );
 }
