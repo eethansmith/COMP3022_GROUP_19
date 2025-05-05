@@ -56,23 +56,40 @@ export default function ServicesDashboard({
       .catch(console.error);
   }, [priorityCsv]);
 
+  const selectedRegionData = scoresData.find((data, index) => data.id === selectedRegion);
+
   /* ------------------------------ UI ------------------------------ */
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.header}>
+    <div className={styles["wrapper"]}>
+      <div className={styles["header"]}>
         {blurb.map((txt, i) => <p key={i}>{txt}</p>)}
       </div>
 
-      <p>Selected region: {selectedRegion}</p>
+      <h2
+        className={`${styles["region-title"]} ${
+          selectedRegionData ? styles["region-selected"] : styles["region-prompt"]
+        }`}
+      >
+        {selectedRegionData ? (
+          <><span className={styles["region-name"]}>{selectedRegionData.name}</span> selected</>
+        ) : (
+          <>⚠️ <span className={styles["select-prompt"]}>SELECT A REGION FOR MORE INFORMATION</span></>
+        )}
+      </h2>
 
-      <main className={styles.content}>
-        <SplitRow leftWidth="50%" rightWidth="50%" height="70%">
+
+      <div className={styles["grid-container"]}>
+
+        <div className={`${styles["grid-item"]} ${styles["line-chart-container"]}`}>
           <LineChart
             dataUrl={timelineCsv}
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
             colorScale={colorScale}
           />
+        </div>
+
+        <div className={`${styles["grid-item"]} ${styles["shake-map-container"]}`}>
           <ShakeMap
             data={geoJson}
             scoresMap={scoresMap}
@@ -80,23 +97,27 @@ export default function ServicesDashboard({
             setSelectedRegion={setSelectedRegion}
             colorScale={colorScale}
           />
-        </SplitRow>
+        </div>
 
-        <SplitRow leftWidth="60%" rightWidth="40%" height="25%">
+        <div className={`${styles["grid-item"]} ${styles["radar-graph-container"]}`}>
           <RadarGraph
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
             scoresMap={scoresMap}
             colorScale={colorScale}
           />
+        </div>
+
+        <div className={`${styles["grid-item"]} ${styles["bar-chart-container"]}`}>
           <BarChart
             data={scoresData}
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
             colorScale={colorScale}
           />
-        </SplitRow>
-      </main>
+        </div>
+
+      </div>
     </div>
   );
 }
