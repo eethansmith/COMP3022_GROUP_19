@@ -20,6 +20,7 @@ export default function ShakeMap({
     d3.scaleLinear().domain([0, 10]).range(["#FFFBEA", "#8B0000"]).clamp(true);
 
   useEffect(() => {
+    
     if (!data || !scoresMap) return;
 
     const svgEl = svgRef.current;

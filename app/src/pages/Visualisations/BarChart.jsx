@@ -8,9 +8,10 @@ export default function BarChart({
   data,
   selectedRegion,
   setSelectedRegion,
-  colorScale,           // <-- new prop
+  colorScale,           
   className
 }) {
+
   const svgRef = useRef();
 
   // default if parent forgets
@@ -22,6 +23,7 @@ export default function BarChart({
       .clamp(true);
 
   useEffect(() => {
+
     if (!data.length) return;
 
     const svgEl = svgRef.current;
@@ -84,9 +86,9 @@ BarChart.propTypes = {
   data: PropTypes.arrayOf(
     PropTypes.shape({
       id:       PropTypes.number.isRequired,
-      name:     PropTypes.string.isRequired,
+      // name:     PropTypes.string.isRequired,
       rating:   PropTypes.number.isRequired,
-      n:        PropTypes.number.isRequired,
+      // n:        PropTypes.number.isRequired,
       mean_sev: PropTypes.number.isRequired,
       adjusted: PropTypes.number.isRequired
     })

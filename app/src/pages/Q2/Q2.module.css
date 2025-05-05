@@ -12,9 +12,18 @@
 .grid-item {
     border: 1px solid black;
     border-radius: 5px;
+    min-height: 300px;
 }
 
 .shake-map-container {
     grid-column: 2;
     grid-row: 1 / span 2;
+}
+
+.bar-chart-container {
+
+}
+
+.table-container {
+    
 }
