@@ -142,7 +142,19 @@ export default function LineChart({
                       }),
         update => update
       )
-      .attr("stroke-width", d => (selectedRegion === d.area ? 3 : 1.5))
+      .attr("stroke-width", d => (selectedRegion === d.area ? 5 : 1.5))
+      .attr("stroke", d => 
+        selectedRegion == null || selectedRegion === d.area
+          ? color(d.area)
+          : (() => {
+
+            console.log(d.area, selectedRegion)
+
+            const c = d3.hsl(color(d.area))
+            c.s = 0.2;
+            return c.toString();
+          })()
+      )
       .attr("d", d => line(d.values));
   }, [data, width, selectedRegion, setSelectedRegion, aspectRatio]);
 
