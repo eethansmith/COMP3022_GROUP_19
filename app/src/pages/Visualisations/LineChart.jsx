@@ -123,8 +123,19 @@ export default function LineChart({
                       .attr("class", "series")
                       .attr("fill", "none")
                       .attr("cursor", "pointer")
-                      .attr("stroke", d => color(d.area))
-                      .on("click", (_, d) => setSelectedRegion(+d.area))   // ← numeric
+                      .attr("stroke", d => 
+                        selectedRegion == null || selectedRegion === d.area
+                          ? color(d.area)
+                          : (() => {
+                            const c = d3.hsl(color(d.area))
+                            c.s = 0.2;
+                            return c.toString();
+                          })()
+                      )
+                      .on("click", (_, d) => {
+                        setSelectedRegion(prev => (prev === d.area ? null : d.area));
+                      })
+                         // ← numeric
                       .on("mouseover", function () { d3.select(this).attr("stroke-width", 3); })
                       .on("mouseout",  function (_, d) {
                         d3.select(this).attr("stroke-width", selectedRegion === d.area ? 3 : 1.5);

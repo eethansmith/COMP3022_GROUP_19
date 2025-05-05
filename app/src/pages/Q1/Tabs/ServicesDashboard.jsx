@@ -63,6 +63,8 @@ export default function ServicesDashboard({
         {blurb.map((txt, i) => <p key={i}>{txt}</p>)}
       </div>
 
+      <p>Selected region: {selectedRegion}</p>
+
       <main className={styles.content}>
         <SplitRow leftWidth="50%" rightWidth="50%" height="70%">
           <LineChart
