@@ -147,9 +147,6 @@ export default function LineChart({
         selectedRegion == null || selectedRegion === d.area
           ? color(d.area)
           : (() => {
-
-            console.log(d.area, selectedRegion)
-
             const c = d3.hsl(color(d.area))
             c.s = 0.2;
             return c.toString();
