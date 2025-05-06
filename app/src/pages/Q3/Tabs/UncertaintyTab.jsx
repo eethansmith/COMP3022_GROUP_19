@@ -3,7 +3,7 @@ import styles from "./UncertaintyTab.module.css";
 import BoxPlot from "../../Visualisations/BoxPlot";
 import HeatmapPlot from "../../Visualisations/HeatmapPlot";
 import StatusOvertime from "../../Visualisations/StatusOvertime";
-import TurnPoints from "../../Visualisations/TurnPoints";
+import TurnPoints from "../../Visualisations/BoxPlot";
 
 
 export default function UncertaintyByDayTab({
@@ -24,23 +24,15 @@ export default function UncertaintyByDayTab({
                         day={day}
                     />
                 </div>
-
-                <div className={`${styles["grid-item"]} ${styles["line-chart-container"]}`}>
+                <div className={styles["grid-item"]}>
                     <BoxPlot
-                    
-                    />
-                </div>
-                
-                <div className={styles["grid-item"]}>
-                    <HeatmapPlot
-                    />
-                </div>
-
-                <div className={styles["grid-item"]}>
-                    <TurnPoints
                     />
                 </div>
             </div>
+            <div className={styles["grid-item"]}>
+                    <HeatmapPlot
+                    />
+                </div>
         </div>
     </div>)
 }
