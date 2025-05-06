@@ -1,180 +1,322 @@
-'use client';
+// src/pages/Q3/Visualisations/StatusOvertime.jsx
+import { useEffect, useMemo, useState } from "react";
 
-// StatusOvertime.jsx
-// ---------------
-// Faceted "island status over time" visualisation rewritten to match the
-// requested skeleton.  The component receives a CSV path via props, filters
-// by `day` (UTC date‑of‑month) when provided, and auto‑sizes to the parent
-// container.
+const CSV_PATH =
+  process.env.PUBLIC_URL + "/data/resources/Q3/island-series.csv";
 
-import React, { useEffect, useState, useMemo } from 'react';
-import {
-  ResponsiveContainer,
-  ComposedChart,
-  Line,
-  Bar,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from 'recharts';
-import * as d3 from 'd3';
-
-const SCHEMES = ['equal', 'sqrt_n', 'intensity'];
-
-export default function StatusOvertime({
-  day,
-  csvUrl = '/data/resources/Q3/island-series.csv', // allow parent to override location
-  ...props
-}) {
-  /* --------------------------- data state --------------------------- */
-  const [rows, setRows] = useState(null);
-  const [error, setError] = useState(null);
-
-  /* --------------------------- load CSV ----------------------------- */
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const raw = await d3.csv(csvUrl, d3.autoType);
-        if (cancelled) return;
-
-        // Optional day filter (UTC 1‑based date)
-        const filtered = day
-          ? raw.filter((d) => new Date(d.time_bin).getUTCDate() === Number(day))
-          : raw;
-
-        // Pre‑compute ribbon bounds: composite ± 1.96 × combined_uncertainty
-        const prepared = filtered.map((d) => {
-          const upper = Math.min(1, d.composite + 1.96 * d.combined_uncertainty);
-          const lower = Math.max(0, d.composite - 1.96 * d.combined_uncertainty);
-          return { ...d, upper, lower };
-        });
-
-        setRows(prepared);
-      } catch (e) {
-        console.error(e);
-        setError(e);
-      }
-    })();
-
-    return () => (cancelled = true);
-  }, [csvUrl, day]);
-
-  /* --------------------------- organise by scheme ------------------- */
-  const rowsByScheme = useMemo(() => {
-    if (!rows) return null;
-    return SCHEMES.reduce((acc, scheme) => {
-      acc[scheme] = rows.filter((d) => d.scheme === scheme);
-      return acc;
+// ---- helpers ---------------------------------------------------------------
+const parseCSV = (raw) => {
+  const [hdr, ...lines] = raw.trim().split(/\r?\n/);
+  const cols = hdr.split(",");
+  return lines.map((L) => {
+    const vals = L.split(",");
+    return cols.reduce((o, c, i) => {
+      const v = vals[i];
+      if (["composite", "samp_uncertainty", "cover_uncertainty", "combined_uncertainty"].includes(c))
+        o[c] = parseFloat(v);
+      else if (c === "n_reports") o[c] = parseInt(v, 10);
+      else if (c === "time_bin") o[c] = new Date(v);
+      else o[c] = v;
+      return o;
     }, {});
+  });
+};
+
+const scaleLinear = (d0, d1, r0, r1) => {
+  const span = d1 - d0 || 1;
+  const m = (r1 - r0) / span;
+  return (x) => r0 + (x - d0) * m;
+};
+
+const SCHEME_COLORS = {
+  equal: "#2563eb",      // blue
+  intensity: "#f59e0b",  // amber
+  sqrt_n: "#10b981",     // green
+};
+
+// ---------------------------------------------------------------------------
+export default function StatusOvertime() {
+  const [rows, setRows] = useState([]);
+
+  useEffect(() => {
+    fetch(CSV_PATH)
+      .then((r) => r.text())
+      .then((txt) => setRows(parseCSV(txt)))
+      .catch(console.error);
+  }, []);
+
+  // 1-hour binning + aggregation
+  const { byScheme, extents } = useMemo(() => {
+    if (!rows.length) return { byScheme: {}, extents: {} };
+
+    const BIN_MS = 1 * 3600 * 1000;             // 1-hour bins
+    const START = new Date("2020-04-05T00:00:00Z"); // fixed start
+    const buckets = {};
+
+    rows.forEach((d) => {
+      const tms = d.time_bin.getTime();
+      const b0 = Math.floor(tms / BIN_MS) * BIN_MS;
+      const key = `${d.scheme}|${b0}`;
+      if (!buckets[key]) {
+        buckets[key] = {
+          scheme: d.scheme,
+          time: new Date(b0),
+          comps: [],
+          uncs: [],
+          reps: 0,
+        };
+      }
+      buckets[key].comps.push(d.composite);
+      buckets[key].uncs.push(d.combined_uncertainty);
+      buckets[key].reps += d.n_reports;
+    });
+
+    const byScheme = {};
+    let yMin = Infinity,
+      yMax = -Infinity,
+      maxRep = 0,
+      xMax = -Infinity;
+
+    Object.values(buckets).forEach((b) => {
+      const avgC = b.comps.reduce((a, v) => a + v, 0) / b.comps.length;
+      const avgU = b.uncs.reduce((a, v) => a + v, 0) / b.uncs.length;
+      const rec = {
+        time: b.time,
+        composite: avgC,
+        combined_uncertainty: avgU,
+        n_reports: b.reps,
+      };
+      byScheme[b.scheme] = byScheme[b.scheme] || [];
+      byScheme[b.scheme].push(rec);
+
+      // extents
+      const lo = avgC - 1.96 * avgU;
+      const hi = avgC + 1.96 * avgU;
+      if (lo < yMin) yMin = lo;
+      if (hi > yMax) yMax = hi;
+      if (b.reps > maxRep) maxRep = b.reps;
+      const tms0 = b.time.getTime();
+      if (tms0 > xMax) xMax = tms0;
+    });
+
+    Object.values(byScheme).forEach((arr) =>
+      arr.sort((a, b) => a.time - b.time)
+    );
+
+    return {
+      byScheme,
+      extents: {
+        yMin,
+        yMax,
+        maxRep,
+        xMin: START,            // force start at 2020-04-05T00:00Z
+        xMax: new Date(xMax),
+      },
+    };
   }, [rows]);
 
-  /* --------------------------- render ------------------------------- */
-  if (error) return <div className="text-red-600">Failed to load: {error.message}</div>;
-  if (!rows) return <div className="italic">Loading island status…</div>;
+  if (!Object.keys(byScheme).length)
+    return <p style={{ textAlign: "center" }}>Loading…</p>;
+
+  // ---- layout ----
+  const M = { top: 50, right: 20, bottom: 60, left: 70 };
+  const W = 800,
+    H = 350;
+  const fullW = W + M.left + M.right;
+  const fullH = H + M.top + M.bottom;
+
+  // ---- scales ----
+  const xScale = scaleLinear(
+    extents.xMin.getTime(),
+    extents.xMax.getTime(),
+    0,
+    W
+  );
+  const yScale = scaleLinear(extents.yMin, extents.yMax, H, 0);
+  const rScale = scaleLinear(0, extents.maxRep, H, 0);
+
+  // x-ticks every 6h
+  const TICK_MS = 6 * 3600 * 1000;
+  const ticks = [];
+  for (
+    let t = Math.floor(extents.xMin.getTime() / TICK_MS) * TICK_MS;
+    t <= extents.xMax.getTime();
+    t += TICK_MS
+  ) {
+    ticks.push(new Date(t));
+  }
+
+  const makeLine = (arr) =>
+    arr
+      .map((d, i) =>
+        `${i === 0 ? "M" : "L"}${xScale(d.time.getTime())},${yScale(
+          d.composite
+        )}`
+      )
+      .join(" ");
+
+  const makeRibbon = (arr) => {
+    if (!arr.length) return "";
+    const up = arr
+      .map(
+        (d) =>
+          `L${xScale(d.time.getTime())},${yScale(
+            d.composite + 1.96 * d.combined_uncertainty
+          )}`
+      )
+      .join(" ")
+      .replace(/^L/, "M");
+    const dn = arr
+      .slice()
+      .reverse()
+      .map(
+        (d) =>
+          `L${xScale(d.time.getTime())},${yScale(
+            d.composite - 1.96 * d.combined_uncertainty
+          )}`
+      )
+      .join(" ");
+    return `${up} ${dn} Z`;
+  };
 
   return (
-    <div style={{ width: '100%', height: '100%' }} {...props}>
-      {/* Visually hidden heading for accessibility */}
-      <h2 className="sr-only">Island status over time{day ? ` (Day ${day})` : ''}</h2>
+    <div style={{ width: "100%" }}>
+      {/* Title */}
+      <h4 style={{ textAlign: "center", marginBottom: "8px" }}>
+        Composite Severity &amp; Report Volume over Time
+      </h4>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 w-full h-full">
-        {SCHEMES.map((scheme) => (
-          <div key={scheme} className="flex flex-col w-full h-96 xl:h-full shadow rounded-lg p-2">
-            <h3 className="text-base font-semibold capitalize mb-1">
-              {scheme.replace('_', ' ')} weighting
-            </h3>
-
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={rowsByScheme[scheme]}>       
-                <CartesianGrid strokeDasharray="3 3" />
-
-                {/* axes */}
-                <XAxis
-                  dataKey="time_bin"
-                  tickFormatter={(v) => v.slice(11, 16)} // show HH:MM
-                  minTickGap={20}
-                  interval="preserveStartEnd"
+      <svg
+        width={fullW}
+        height={fullH}
+        viewBox={`0 0 ${fullW} ${fullH}`}
+        style={{ maxWidth: "100%", height: "auto" }}
+      >
+        <g transform={`translate(${M.left},${M.top})`}>
+          {/* Grey bars = report volume */}
+          {Object.values(byScheme).flatMap((arr, si) =>
+            arr.map((d, i) => {
+              const bw = (W / arr.length) * 0.9;
+              const x = xScale(d.time.getTime()) - bw / 2;
+              const y = rScale(d.n_reports);
+              return (
+                <rect
+                  key={`bar-${si}-${i}`}
+                  x={x}
+                  y={y}
+                  width={bw}
+                  height={H - y}
+                  fill="#ddd"
                 />
-                <YAxis yAxisId="left" domain={[0, 1]} tickCount={6} />
-                <YAxis yAxisId="right" orientation="right" hide />
+              );
+            })
+          )}
 
-                {/* ribbon – lower/upper stack */}
-                <Area
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="lower"
-                  stackId="ribbon"
-                  stroke="none"
-                  fillOpacity={0}
+          {/* Ribbons & Lines */}
+          {Object.entries(byScheme).map(([scheme, arr]) => {
+            const color = SCHEME_COLORS[scheme] || "#666";
+            return (
+              <g key={scheme}>
+                <path
+                  d={makeRibbon(arr)}
+                  fill={color}
+                  opacity={0.25}
                 />
-                <Area
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="upper"
-                  stackId="ribbon"
-                  stroke="none"
-                  fillOpacity={0.3}
-                />
-
-                {/* composite curve */}
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="composite"
+                <path
+                  d={makeLine(arr)}
+                  fill="none"
+                  stroke={color}
                   strokeWidth={2}
-                  dot={false}
                 />
+              </g>
+            );
+          })}
 
-                {/* uncertainty drivers */}
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="samp_uncertainty"
-                  strokeDasharray="4 4"
-                  strokeOpacity={0.9}
-                  dot={false}
-                />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="cover_uncertainty"
-                  strokeDasharray="2 2"
-                  strokeOpacity={0.9}
-                  dot={false}
-                />
+          {/* X-axis */}
+          <line
+            x1={0}
+            x2={W}
+            y1={H}
+            y2={H}
+            stroke="#000"
+            strokeWidth={0.7}
+          />
+          {ticks.map((t, i) => {
+            const x = xScale(t.getTime());
+            return (
+              <g key={i} transform={`translate(${x},${H})`}>
+                <line y2={6} stroke="#000" strokeWidth={0.7} />
+                <text
+                  y={20}
+                  fontSize={11}
+                  textAnchor="middle"
+                  style={{ userSelect: "none" }}
+                >
+                  {t.getUTCDate()}-{t.getUTCHours().toString().padStart(2, "0")}
+                </text>
+              </g>
+            );
+          })}
 
-                {/* report volume bars */}
-                <Bar
-                  yAxisId="right"
-                  dataKey="n_reports"
-                  barSize={4}
-                  fill="currentColor"
-                  fillOpacity={0.15}
-                />
+          {/* Y-axis */}
+          <line
+            x1={0}
+            x2={0}
+            y1={0}
+            y2={H}
+            stroke="#000"
+            strokeWidth={0.7}
+          />
 
-                <Tooltip
-                  contentStyle={{ fontSize: '0.8rem' }}
-                  labelFormatter={(label) =>
-                    new Date(label).toLocaleString('en-GB', {
-                      timeZone: 'UTC',
-                      year: 'numeric',
-                      month: 'short',
-                      day: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
-                  }
-                />
-                <Legend wrapperStyle={{ fontSize: '0.75rem' }} />
-              </ComposedChart>
-            </ResponsiveContainer>
+          {/* Axis Labels */}
+          <text
+            x={W / 2}
+            y={H + 45}
+            textAnchor="middle"
+            fontSize={12}
+            fontWeight="500"
+          >
+            Time (UTC)
+          </text>
+          <text
+            transform={`translate(${-50},${H / 2}) rotate(-90)`}
+            textAnchor="middle"
+            fontSize={12}
+            fontWeight="500"
+          >
+            Severity Index
+          </text>
+        </g>
+      </svg>
+
+      {/* Legend */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          gap: "24px",
+          marginTop: "12px",
+        }}
+      >
+        {/* schemes */}
+        {Object.entries(SCHEME_COLORS).map(([scheme, color]) => (
+          <div
+            key={scheme}
+            style={{ display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            <svg width="16" height="16">
+              <rect width="16" height="16" fill={color} opacity={0.6} />
+            </svg>
+            <small>{scheme}</small>
           </div>
         ))}
+        {/* bars */}
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <svg width="16" height="16">
+            <rect width="16" height="16" fill="#ddd" />
+          </svg>
+          <small>Total reports</small>
+        </div>
       </div>
     </div>
   );

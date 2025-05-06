@@ -4,6 +4,7 @@ import BoxPlot from "../../Visualisations/BoxPlot";
 import UncertaintyLineChart from "../../Visualisations/UncertaintyLineChart";
 import StatusOvertime from "../../Visualisations/StatusOvertime";
 
+
 export default function UncertaintyByDayTab({
     day,
     ...props
