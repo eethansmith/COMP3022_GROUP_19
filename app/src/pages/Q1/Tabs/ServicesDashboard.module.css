@@ -28,7 +28,12 @@
   border-radius: 5px;
   min-height: 300px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+}
 
+.grid-item > h2 {
+  text-align: center;
 }
 
 /* SPECIFIC ITEMS */

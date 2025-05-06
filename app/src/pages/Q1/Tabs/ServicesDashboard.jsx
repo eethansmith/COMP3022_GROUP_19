@@ -80,6 +80,7 @@ export default function ServicesDashboard({
       <div className={styles["grid-container"]}>
 
         <div className={`${styles["grid-item"]} ${styles["line-chart-container"]}`}>
+          <h2>Seismic Activity Over Time</h2>
           <LineChart
             dataUrl={timelineCsv}
             selectedRegion={selectedRegion}
@@ -89,6 +90,7 @@ export default function ServicesDashboard({
         </div>
 
         <div className={`${styles["grid-item"]} ${styles["shake-map-container"]}`}>
+          <h2>St. Himark Region Map</h2>
           <ShakeMap
             data={geoJson}
             scoresMap={scoresMap}
@@ -99,6 +101,7 @@ export default function ServicesDashboard({
         </div>
 
         <div className={`${styles["grid-item"]} ${styles["radar-graph-container"]}`}>
+          <h2>Infrastructure Damages by Region</h2>
           <RadarGraph
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
@@ -108,6 +111,7 @@ export default function ServicesDashboard({
         </div>
 
         <div className={`${styles["grid-item"]} ${styles["bar-chart-container"]}`}>
+          <h2>Regions by Shake Intensity</h2>
           <BarChart
             data={scoresData}
             selectedRegion={selectedRegion}

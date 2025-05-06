@@ -168,90 +168,7 @@ export default function LineChart({
       .attr("ry", 5)
       .attr("filter", "url(#drop-shadow)");
 
-    /* Chart title */
-    svg.selectAll("text.chart-title")
-      .data([null])
-      .join("text")
-      .attr("class", "chart-title")
-      .attr("x", width / 2)
-      .attr("y", 15)
-      .attr("text-anchor", "middle")
-      .attr("font-size", "14px")
-      .attr("font-weight", "bold")
-      .attr("fill", "#495057")
-      .text("Seismic Activity Timeline");
 
-    /* axes */
-    g.selectAll("g.x-axis")
-      .data([null])
-      .join("g")
-      .attr("class", "x-axis")
-      .attr("transform", `translate(0,${h})`)
-      .call(
-        d3.axisBottom(x)
-          .ticks(d3.timeDay.every(1))
-          .tickFormat(d3.timeFormat("%d %b"))
-          .tickSize(-5)
-      )
-      .call(g => {
-        g.select(".domain")
-          .attr("stroke", "#adb5bd")
-          .attr("stroke-width", 1);
-        g.selectAll(".tick text")
-          .attr("font-size", "11px")
-          .attr("fill", "#495057")
-          .attr("font-weight", "500")
-          .attr("dy", "1em");
-        g.selectAll(".tick line")
-          .attr("stroke", "#adb5bd");
-      });
-
-    // X-axis label
-    g.selectAll("text.x-label")
-      .data([null])
-      .join("text")
-      .attr("class", "x-label")
-      .attr("x", w / 2)
-      .attr("y", h + m.bottom - 5)
-      .attr("text-anchor", "middle")
-      .attr("font-size", "12px")
-      .attr("fill", "#495057")
-      .text("Date");
-
-    g.selectAll("g.y-axis")
-      .data([null])
-      .join("g")
-      .attr("class", "y-axis")
-      .call(
-        d3.axisLeft(y)
-          .tickSize(-w)
-          .ticks(5)
-      )
-      .call(g => {
-        g.select(".domain").remove();
-        g.selectAll(".tick line")
-          .attr("stroke", "#dee2e6")
-          .attr("stroke-width", 1)
-          .attr("stroke-dasharray", "3,3");
-        g.selectAll(".tick text")
-          .attr("font-size", "11px")
-          .attr("fill", "#495057")
-          .attr("font-weight", "500")
-          .attr("dx", "-0.5em");
-      });
-
-    // Y-axis label
-    g.selectAll("text.y-label")
-      .data([null])
-      .join("text")
-      .attr("class", "y-label")
-      .attr("transform", "rotate(-90)")
-      .attr("x", -h / 2)
-      .attr("y", -m.left + 15)
-      .attr("text-anchor", "middle")
-      .attr("font-size", "12px")
-      .attr("fill", "#495057")
-      .text("Severity");
 
     /* Draw area under the lines for selected region */
     if (selectedRegion !== null) {
@@ -326,6 +243,78 @@ export default function LineChart({
           .attr("stroke-width", 2);
       }
     }
+
+        /* axes */
+        g.selectAll("g.x-axis")
+        .data([null])
+        .join("g")
+        .attr("class", "x-axis")
+        .attr("transform", `translate(0,${h})`)
+        .call(
+          d3.axisBottom(x)
+            .ticks(d3.timeDay.every(1))
+            .tickFormat(d3.timeFormat("%d %b"))
+            .tickSize(-5)
+        )
+        .call(g => {
+          g.select(".domain")
+            .attr("stroke", "#adb5bd")
+            .attr("stroke-width", 1);
+          g.selectAll(".tick text")
+            .attr("font-size", "11px")
+            .attr("fill", "#495057")
+            .attr("font-weight", "500")
+            .attr("dy", "1em");
+          g.selectAll(".tick line")
+            .attr("stroke", "#adb5bd");
+        });
+  
+      // X-axis label
+      g.selectAll("text.x-label")
+        .data([null])
+        .join("text")
+        .attr("class", "x-label")
+        .attr("x", w / 2)
+        .attr("y", h + m.bottom - 5)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "12px")
+        .attr("fill", "#495057")
+        .text("Date");
+  
+      g.selectAll("g.y-axis")
+        .data([null])
+        .join("g")
+        .attr("class", "y-axis")
+        .call(
+          d3.axisLeft(y)
+            .tickSize(-w)
+            .ticks(5)
+        )
+        .call(g => {
+          g.select(".domain").remove();
+          g.selectAll(".tick line")
+            .attr("stroke", "#dee2e6")
+            .attr("stroke-width", 1)
+            .attr("stroke-dasharray", "3,3");
+          g.selectAll(".tick text")
+            .attr("font-size", "11px")
+            .attr("fill", "#495057")
+            .attr("font-weight", "500")
+            .attr("dx", "-0.5em");
+        });
+  
+      // Y-axis label
+      g.selectAll("text.y-label")
+        .data([null])
+        .join("text")
+        .attr("class", "y-label")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -h / 2)
+        .attr("y", -m.left + 15)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "12px")
+        .attr("fill", "#495057")
+        .text("Severity");
 
     /* Add tooltip for hover effects */
     if (hoveredSeries !== null) {

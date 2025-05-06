@@ -80,7 +80,7 @@ export default function RadarGraph({
     const gridRows = 5;
     const headerFooterHeight = 100; // Reserve space for header and footer text
     const smallChartSize = Math.min(width / (gridColumns * 2), (height - headerFooterHeight) / gridRows) * 0.8;
-    const largeChartSize = Math.min(width * 0.5, height * 0.8);
+    const largeChartSize = Math.min(width * 0.3, height * 0.5);
     
     // Grid area dimensions (left side)
     const gridWidth = width * 0.45;
@@ -89,15 +89,6 @@ export default function RadarGraph({
     // Create main group
     const mainGroup = svg.append("g")
       .attr("class", "radar-container");
-      
-    // Add title for the grid section
-    mainGroup.append("text")
-      .attr("x", gridWidth / 2)
-      .attr("y", 24)
-      .attr("text-anchor", "middle")
-      .attr("font-size", "16px")
-      .attr("font-weight", "bold")
-      .text("All Regions");
       
     // Helper function to create a radar chart
     function createRadarChart(data, size, detailed = false, x = 0, y = 0) {
@@ -308,7 +299,7 @@ export default function RadarGraph({
     // Create detailed radar chart for selected region
     const selectedData = radarData.find(d => d.area === selectedRegion);
     if (selectedData) {
-      const detailedX = width * 0.5;
+      const detailedX = width * 0.6;
       const detailedY = (height - largeChartSize) / 2;
       createRadarChart(selectedData, largeChartSize, true, detailedX, detailedY);
     } else {
