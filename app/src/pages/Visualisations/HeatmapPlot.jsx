@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
-// adjust path if your CSV lives elsewhere
-import csvUrl from "..location-time-matrix.csv";
 
-const CSV_PATH =
-  process.env.PUBLIC_URL + "/data/resources/Q3/location-time-matrix.csv";
+// Path to your CSV in the public folder
+const CSV_PATH = process.env.PUBLIC_URL + "/data/resources/Q3/location-time-matrix.csv";
 
 const HeatmapPlot = () => {
   const [dataMap, setDataMap] = useState({});
@@ -11,7 +9,7 @@ const HeatmapPlot = () => {
   const [timeBins, setTimeBins] = useState([]);
 
   useEffect(() => {
-    fetch(csvUrl)
+    fetch(CSV_PATH)
       .then((r) => r.text())
       .then((text) => {
         const rows = parseCSV(text);
@@ -35,7 +33,6 @@ const HeatmapPlot = () => {
         });
 
         const times = Array.from(timeSet).sort();
-        // sort locations by their worst‐ever severity (desc)
         const locs = Array.from(locSet).sort((a, b) => {
           const maxA = Math.max(
             ...times.map((t) => map[a][t]?.composite_severity || 0)
@@ -52,7 +49,7 @@ const HeatmapPlot = () => {
       });
   }, []);
 
-  // linear green→red scale
+  // simple green→red severity ramp
   const getColor = (v) => {
     if (v == null) return "#eee";
     const r = Math.round(255 * v);
@@ -60,83 +57,102 @@ const HeatmapPlot = () => {
     return `rgb(${r},${g},0)`;
   };
 
-  // simple CSV parser (no quotes/commas-in-fields)
+  // naive CSV parser
   const parseCSV = (text) => {
     const [headerLine, ...lines] = text.trim().split("\n");
     const headers = headerLine.split(",");
     return lines.map((line) => {
-      const parts = line.split(",");
-      return headers.reduce((o, h, i) => {
-        o[h] = parts[i];
-        return o;
+      const cols = line.split(",");
+      return headers.reduce((obj, h, i) => {
+        obj[h] = cols[i];
+        return obj;
       }, {});
     });
   };
 
+  // decide tick interval to show ~10 labels
+  const tickInterval = Math.ceil(timeBins.length / 10);
+
   return (
-    <div style={{ overflow: "auto", fontFamily: "sans-serif" }}>
+    <div style={{ width: '100%', overflow: 'auto', fontFamily: 'sans-serif' }}>
+      {/* Legend */}
+      <div style={{ display: 'flex', alignItems: 'center', margin: '8px 0', fontSize: '12px' }}>
+        <span style={{ marginRight: '8px' }}>Low</span>
+        <div style={{ flex: 1, height: '8px', background: 'linear-gradient(to right, green, red)' }} />
+        <span style={{ marginLeft: '8px' }}>High</span>
+      </div>
+
+      {/* Axis Labels */}
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+        <div style={{ width: '150px', textAlign: 'center', fontSize: '12px' }}>Location</div>
+        <div style={{ flex: 1, textAlign: 'center', fontSize: '12px' }}>Time (HH:MM)</div>
+      </div>
+
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: `150px repeat(${timeBins.length}, 20px)`,
-          gridAutoRows: "20px",
+          display: 'grid',
+          gridTemplateColumns: `150px repeat(${timeBins.length}, 12px)`,
+          gridAutoRows: '12px',
         }}
       >
-        {/* top‐left empty cell */}
+        {/* top-left blank */}
         <div style={{ gridColumn: 1, gridRow: 1 }} />
 
-        {/* time‐bin headers */}
-        {timeBins.map((time, i) => (
+        {/* Time ticks */}
+        {timeBins.map((t, i) => (
           <div
-            key={time}
+            key={t}
             style={{
               gridColumn: i + 2,
               gridRow: 1,
-              textAlign: "center",
-              fontSize: "8px",
-              padding: "1px",
+              textAlign: 'center',
+              fontSize: '8px',
+              padding: '1px',
+              visibility: i % tickInterval === 0 ? 'visible' : 'hidden',
             }}
           >
-            {time.slice(11, 16)}
+            {t.slice(11, 16)}
           </div>
         ))}
 
-        {/* rows */}
+        {/* Data Cells */}
         {locations.map((loc, ri) => (
           <React.Fragment key={loc}>
-            {/* row label */}
+            {/* Location Labels */}
             <div
               style={{
                 gridColumn: 1,
                 gridRow: ri + 2,
-                fontSize: "10px",
-                padding: "2px",
-                whiteSpace: "nowrap",
+                fontSize: '10px',
+                padding: '1px',
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis',
+                overflow: 'hidden',
               }}
+              title={loc}
             >
               {loc}
             </div>
-            {/* cells */}
-            {timeBins.map((time, ci) => {
-              const cell = dataMap[loc]?.[time];
-              const sev = cell?.composite_severity;
-              const unc = cell?.local_uncertainty;
-              // make uncertain cells “fuzzier”
+
+            {/* Cells */}
+            {timeBins.map((t, ci) => {
+              const c = dataMap[loc]?.[t];
+              const sev = c?.composite_severity;
+              const unc = c?.local_uncertainty;
               const opacity = unc != null ? 1 - Math.min(unc / 2, 1) : 1;
               const bg = getColor(sev);
-              const title = cell
-                ? `Reports: ${cell.n_reports}
-Missing rate: ${cell.missing_rate}
-Composite severity: ${sev}`
-                : "";
+              const title = c
+                ? `Reports: ${c.n_reports}\nMissing rate: ${c.missing_rate}\nSeverity: ${sev}`
+                : '';
+
               return (
                 <div
-                  key={time}
+                  key={t}
                   style={{
                     gridColumn: ci + 2,
                     gridRow: ri + 2,
-                    width: "20px",
-                    height: "20px",
+                    width: '12px',
+                    height: '12px',
                     backgroundColor: bg,
                     opacity,
                   }}

@@ -1,8 +1,0 @@
-key,value
-bin_size_hours,1
-n_locations,19
-start_time,2020-04-05T23:00:00Z
-end_time,2020-04-10T23:00:00Z
-island_weight_schemes,equal,sqrt_n,intensity
-CP_K,5
-CP_MULT,3
