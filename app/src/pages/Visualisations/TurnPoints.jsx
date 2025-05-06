@@ -1,5 +1,3 @@
-// src/Visualisations/ChangePointBoxPlotGrouped.jsx
-//
 // Multiple box-plots per day – one for EACH weighting scheme
 //
 import React, { useRef, useEffect } from "react";
@@ -183,7 +181,7 @@ const ChangePointBoxPlotGrouped = ({
           .attr("fill", "#000")
           .attr("text-anchor", "middle")
           .attr("font-size", "13px")
-          .text("Day of detected change"));
+          .text("Quake Timeline"));
 
       g.append("g")
         .call(yAxis)
@@ -225,7 +223,7 @@ const ChangePointBoxPlotGrouped = ({
         row.append("text")
           .attr("x", 20)
           .attr("y", 11)
-          .text(s);
+          .text()
       });
 
     }).catch(err => console.error("ChangePointBoxPlotGrouped:", err));

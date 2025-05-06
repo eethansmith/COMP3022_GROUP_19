@@ -1,5 +1,3 @@
-
-// src/pages/Q3/Visualisations/StatusOvertime.jsx
 import { useEffect, useMemo, useState } from "react";
 
 const CSV_PATH =
@@ -23,6 +21,12 @@ const parseCSV = (raw) => {
   });
 };
 
+const schemeLabels = {
+  equal:     "Locations Equally Weighted ",
+  intensity: "Severity Intensity Weighting",
+  sqrt_n : "√Number of Reports",
+};
+
 const scaleLinear = (d0, d1, r0, r1) => {
   const span = d1 - d0 || 1;
   const m = (r1 - r0) / span;
@@ -30,9 +34,9 @@ const scaleLinear = (d0, d1, r0, r1) => {
 };
 
 const SCHEME_COLORS = {
-  equal: "#2563eb",      // blue
+  equal: "#f59e0b",      // blue
   intensity: "#10b981",  // amber
-  sqrt_n: "#f59e0b",     // green
+  sqrt_n: "#2563eb",     // green
 };
 
 // ---------------------------------------------------------------------------
@@ -308,7 +312,7 @@ export default function StatusOvertime() {
             <svg width="16" height="16">
               <rect width="16" height="16" fill={color} opacity={0.4} />
             </svg>
-            <small>{scheme}</small>
+            <small>{schemeLabels[scheme] ?? scheme}</small>
           </div>
         ))}
         {/* bars */}
