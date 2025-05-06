@@ -19,7 +19,7 @@ const Question3 = () => {
             <h3>How do conditions change over time? How does uncertainty in change over time? Describe the key changes you see.</h3>
 
             <div className={styles.tabs}>
-                <Tabular tabs={[1, 2, 3].map(DayTabFactory)} />
+                <Tabular tabs={[1].map(DayTabFactory)} />
             </div>
 
         </div>
