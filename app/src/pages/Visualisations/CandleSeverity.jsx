@@ -141,7 +141,7 @@ export default function CandleSeverityCanvas({ height = 450 }) {
     canvas.style.height = `${height}px`;
     ctx.scale(dpr, dpr);
 
-    const margin   = { top: 20, right: 60, bottom: 40, left: 60 };
+    const margin   = { top: 40, right: 60, bottom: 40, left: 60 };
     const volFrac  = 0.22;
     const candleH  = (height - margin.top - margin.bottom) * (1 - volFrac);
     const volH     = (height - margin.top - margin.bottom) * volFrac;
@@ -152,11 +152,11 @@ export default function CandleSeverityCanvas({ height = 450 }) {
     const candleW = Math.max(2, bandW * 0.6);
     const wickW   = Math.max(1, bandW * 0.2);
 
-    // Extend y range by ±3
+    // Extend y range by ±1
     const rawMinLow  = Math.min(...data.map(d => d.low));
     const rawMaxHigh = Math.max(...data.map(d => d.high));
-    const minLow  = rawMinLow - 3;
-    const maxHigh = rawMaxHigh + 3;
+    const minLow  = rawMinLow - 1;
+    const maxHigh = rawMaxHigh + 1;
     const maxVol  = Math.max(...data.map(d => d.volume));
     const yScale = v =>
       margin.top + ((maxHigh - v) / (maxHigh - minLow)) * candleH;
@@ -165,6 +165,17 @@ export default function CandleSeverityCanvas({ height = 450 }) {
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, width, height);
+
+    // Title
+    ctx.fillStyle = "#000";
+    ctx.font = "16px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(
+      "Reported Severity to Volume of Reports",
+      width / 2,
+      margin.top / 2
+    );
 
     // Axes
     ctx.strokeStyle = "#888";
@@ -175,6 +186,27 @@ export default function CandleSeverityCanvas({ height = 450 }) {
     ctx.moveTo(margin.left, volY0 + 0.5);
     ctx.lineTo(width - margin.right, volY0 + 0.5);
     ctx.stroke();
+
+    // Axis Labels
+    // Y-axis label (vertical)
+    ctx.save();
+    ctx.fillStyle = "#000";
+    ctx.font = "12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.translate(margin.left / 2, margin.top + candleH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText("Recorded Severity", 0, 0);
+    ctx.restore();
+
+    // X-axis label
+    ctx.fillStyle = "#000";
+    ctx.font = "12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    const xLabelX = margin.left + (width - margin.left - margin.right) / 2;
+    const xLabelY = volY0 + volH + 30;
+    ctx.fillText("Timeline", xLabelX, xLabelY);
 
     // Timeline ticks & labels
     const firstTime = new Date(data[0].interval_start).getTime();
@@ -211,7 +243,7 @@ export default function CandleSeverityCanvas({ height = 450 }) {
       const hY = yScale(d.high);
       const lY = yScale(d.low);
       const up = d.close >= d.open;
-      const bodyColor = up ? "#26a69a" : "#ef5350";
+      const bodyColor = up ? "#ef5350" : "#f9a825";
       const grey = "#888";
 
       // Wick (grey)
@@ -252,26 +284,35 @@ export default function CandleSeverityCanvas({ height = 450 }) {
       const xC = margin.left + hoverIdx*bandW + bandW/2;
       const tooltip = [
         `Time: ${new Date(d.interval_start).toLocaleString()}`,
-        `O: ${d.open.toFixed(2)}  H: ${d.high.toFixed(2)}`,
-        `L: ${d.low.toFixed(2)}  C: ${d.close.toFixed(2)}`,
-        `Vol: ${d.volume}`
+        ` Highest: ${d.high.toFixed(2)}`,
+        `Lowest: ${d.low.toFixed(2)}`,
+        `Volume: ${d.volume}`
       ];
       const padding = 6;
       ctx.font = "12px sans-serif";
-      const w = Math.max(...tooltip.map(t => ctx.measureText(t).width)) + padding*2;
-      const h = tooltip.length * 16 + padding*2;
+      // calculate box size
+      const textWidths = tooltip.map(t => ctx.measureText(t).width);
+      const w = Math.max(...textWidths) + padding * 2;
+      const h = tooltip.length * 16 + padding * 2;
+      const shiftX = 10;
       const boxX = Math.min(
         width - margin.right - w,
-        Math.max(margin.left, xC + 10)
+        xC + shiftX
       );
       const boxY = margin.top + 10;
+      // draw box
       ctx.fillStyle = "rgba(255,255,255,0.9)";
       ctx.fillRect(boxX, boxY, w, h);
       ctx.strokeStyle = "#333";
       ctx.strokeRect(boxX, boxY, w, h);
+      // draw text
       ctx.fillStyle = "#000";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
       tooltip.forEach((line, idx) => {
-        ctx.fillText(line, boxX + padding, boxY + padding + idx*16 + 12);
+        const textX = boxX + padding;
+        const textY = boxY + padding + idx * 16;
+        ctx.fillText(line, textX, textY);
       });
     }
   }, [data, width, hoverIdx, height]);
