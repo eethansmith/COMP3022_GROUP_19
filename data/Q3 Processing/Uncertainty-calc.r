@@ -4,10 +4,7 @@
 # Base-R pipeline to clean & roll up earthquake reports for:
 #  • island-series.csv        – island composite & uncertainties
 #  • location-time-matrix.csv – per-location composite + uncertainties
-#  • attribute-series.csv     – island means of each attribute
 #  • changepoints.csv         – detected shifts in composite
-#  • manifest.csv             – metadata about this run
-#  • attribute-weights.csv    – the attribute weighting vector
 #
 # Input:  data/resources/mc1-report-data.csv
 # Output: app/public/data/resources/
@@ -184,9 +181,7 @@ time_bins <- sort(unique(loc_time_df$time_bin))
 island_list <- lapply(names(schemes), function(sch) {
   sub   <- loc_time_df
   w_raw <- schemes[[sch]](sub)
-  # denominator per bin
   denom <- tapply(w_raw, sub$time_bin, sum, na.rm = TRUE)
-  # helper to compute weighted mean of a vector 'v'
   wmean_by_bin <- function(v) {
     num <- tapply(v * w_raw, sub$time_bin, sum, na.rm = TRUE)
     num / denom
@@ -207,61 +202,42 @@ island_df <- do.call(rbind, island_list)
 island_df <- island_df[ order(island_df$scheme, island_df$time_bin), ]
 
 
-### 5. Attribute-level island means -------------------------------
-# mean of each normalized attribute by time_bin
-norm_cols <- all_cols_norm
-attr_df <- aggregate(df[norm_cols],
-                     by = list(time_bin = df$time_bin),
-                     FUN = function(x) mean(x, na.rm = TRUE))
-attr_df <- attr_df[ order(attr_df$time_bin), ]
-
-
-### 6. Change-point detection --------------------------------------
+### 5. Change-point detection --------------------------------------
 cp_list <- lapply(split(island_df, island_df$scheme), function(sub) {
   detect_cpts(sub$time_bin, sub$composite, k = CP_K, mult = CP_MULT)
 })
 names(cp_list) <- names(schemes)
-# attach scheme column
 cp_df <- do.call(rbind, lapply(names(cp_list), function(sch) {
   dfc <- cp_list[[sch]]
   if (nrow(dfc)) dfc$scheme <- sch
   dfc
 }))
-# ensure columns in order
 cp_df <- cp_df[, c("scheme","time_bin",
                    "composite_before","composite_after",
                    "delta","direction")]
 
 
-### 7. Write outputs ------------------------------------------------
+### 6. Write outputs ------------------------------------------------
 iso_time <- function(x) {
   format(x, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 }
 
-# 7a: island-series.csv
+# 6a: island-series.csv
 isl_out <- island_df
 isl_out$time_bin <- iso_time(isl_out$time_bin)
 write.csv(isl_out,
           file = file.path(OUT_DIR, "island-series.csv"),
           row.names = FALSE, quote = FALSE)
 
-# 7b: location-time-matrix.csv
+# 6b: location-time-matrix.csv
 loc_out <- loc_time_df
 loc_out$time_bin <- iso_time(loc_out$time_bin)
 write.csv(loc_out,
           file = file.path(OUT_DIR, "location-time-matrix.csv"),
           row.names = FALSE, quote = FALSE)
 
-# 7c: attribute-series.csv
-attr_out <- attr_df
-attr_out$time_bin <- iso_time(attr_out$time_bin)
-write.csv(attr_out,
-          file = file.path(OUT_DIR, "attribute-series.csv"),
-          row.names = FALSE, quote = FALSE)
-
-# 7d: changepoints.csv
+# 6c: changepoints.csv
 if (nrow(cp_df) == 0) {
-  # write empty template
   write.csv(cp_df,
             file = file.path(OUT_DIR, "changepoints.csv"),
             row.names = FALSE, quote = FALSE)
@@ -272,39 +248,5 @@ if (nrow(cp_df) == 0) {
             file = file.path(OUT_DIR, "changepoints.csv"),
             row.names = FALSE, quote = FALSE)
 }
-
-# 7e: manifest.csv
-manifest_df <- data.frame(
-  key   = c("bin_size_hours",
-            "n_locations",
-            "start_time",
-            "end_time",
-            "island_weight_schemes",
-            "CP_K",
-            "CP_MULT"),
-  value = c(
-    BIN_SIZE_HOURS,
-    length(unique(df$location)),
-    iso_time(min(df$time_bin)),
-    iso_time(max(df$time_bin)),
-    paste(names(schemes), collapse = ","),
-    CP_K,
-    CP_MULT
-  ),
-  stringsAsFactors = FALSE
-)
-write.csv(manifest_df,
-          file = file.path(OUT_DIR, "manifest.csv"),
-          row.names = FALSE, quote = FALSE)
-
-# 7f: attribute-weights.csv
-weights_df <- data.frame(
-  attribute = names(WEIGHTS_ATTRS),
-  weight    = as.numeric(WEIGHTS_ATTRS),
-  stringsAsFactors = FALSE
-)
-write.csv(weights_df,
-          file = file.path(OUT_DIR, "attribute-weights.csv"),
-          row.names = FALSE, quote = FALSE)
 
 cat("✔ Data prep complete – CSVs written to", OUT_DIR, "\n")
