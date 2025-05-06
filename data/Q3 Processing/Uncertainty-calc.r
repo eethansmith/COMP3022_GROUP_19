@@ -248,5 +248,3 @@ if (nrow(cp_df) == 0) {
             file = file.path(OUT_DIR, "changepoints.csv"),
             row.names = FALSE, quote = FALSE)
 }
-
-cat("✔ Data prep complete – CSVs written to", OUT_DIR, "\n")
