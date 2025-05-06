@@ -1,13 +1,13 @@
 import Header from "../../components/Header";
 import Tabular, { TabFactory } from "../../components/Tabular";
 import styles from "./Q3.module.css";
-import UncertaintyByDayTab from "./Tabs/UncertaintyByDayTab";
+import UncertaintyTab from "./Tabs/UncertaintyTab";
 
 /**
  * Creates a tab for the day specified
  * @param {string} day 
  */
-const DayTabFactory = (day, ..._) => TabFactory(`Day ${day}`, <UncertaintyByDayTab day={day} />)
+const DayTabFactory = (day, ..._) => TabFactory(`Day ${day}`, <UncertaintyTab day={day} />)
 
 const Question3 = () => {
 

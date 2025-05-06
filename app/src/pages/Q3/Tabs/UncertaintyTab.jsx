@@ -1,8 +1,8 @@
 import { useState } from "react";
-import styles from "./UncertaintyByDayTab.module.css";
+import styles from "./UncertaintyTab.module.css";
 import BoxPlot from "../../Visualisations/BoxPlot";
 import UncertaintyLineChart from "../../Visualisations/UncertaintyLineChart";
-import RadarDiagram from "../../Visualisations/RadarDiagram";
+import StatusOvertime from "../../Visualisations/StatusOvertime";
 
 export default function UncertaintyByDayTab({
     day,
@@ -18,7 +18,7 @@ export default function UncertaintyByDayTab({
             <div className={styles["grid-container"]}>
 
                 <div className={styles["grid-item"]}>
-                    <RadarDiagram
+                    <StatusOvertime
                         day={day}
                     />
                 </div>
