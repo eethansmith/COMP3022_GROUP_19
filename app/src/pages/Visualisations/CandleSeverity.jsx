@@ -196,7 +196,7 @@ export default function CandleSeverityCanvas({ height = 450 }) {
     ctx.textBaseline = "middle";
     ctx.translate(margin.left / 2, margin.top + candleH / 2);
     ctx.rotate(-Math.PI / 2);
-    ctx.fillText("Recorded Severity", 0, 0);
+    ctx.fillText("Weighted Recorded Severity", 0, 0);
     ctx.restore();
 
     // X-axis label
@@ -285,7 +285,7 @@ export default function CandleSeverityCanvas({ height = 450 }) {
       const tooltip = [
         `Time: ${new Date(d.interval_start).toLocaleString()}`,
         ` Highest: ${d.high.toFixed(2)}`,
-        `Lowest: ${d.low.toFixed(2)}`,
+        ` Lowest: ${d.low.toFixed(2)}`,
         `Volume: ${d.volume}`
       ];
       const padding = 6;
