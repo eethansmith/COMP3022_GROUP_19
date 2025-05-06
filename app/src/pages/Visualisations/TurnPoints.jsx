@@ -1,111 +1,244 @@
-// src/Visualisations/TurnPoints.jsx
+// src/Visualisations/ChangePointBoxPlotGrouped.jsx
+//
+// Multiple box-plots per day – one for EACH weighting scheme
+//
 import React, { useRef, useEffect } from "react";
 import * as d3 from "d3";
 
-const changepointsCSV = process.env.PUBLIC_URL + "/data/resources/Q3/changepoints.csv";
+const CSV_URL = process.env.PUBLIC_URL + "/data/resources/Q3/changepoints.csv";
 
-const TurnPoints = ({
-  width = 800,
-  height = 300,
-  scheme = null   // optional filter on d.scheme
+const colours = d3.schemeSet2;       // up to 8 distinguishable colours
+
+const ChangePointBoxPlotGrouped = ({
+  width     = 960,
+  height    = 420,
+  schemes   = null,      // e.g. ["population","area-weighted"]; null = all
+  title     = "Daily Distribution of Δ by Island-Weighting Scheme",
+  subtitle  = "Each coloured box represents one weighting scheme; whiskers cover points inside 1.5×IQR; dots are outliers.",
 }) => {
   const svgRef = useRef();
 
   useEffect(() => {
-    d3.csv(changepointsCSV, d => ({
+    /* ---------- 1. Load & shape ---------- */
+    d3.csv(CSV_URL, d => ({
       scheme: d.scheme,
-      time: new Date(d.time_bin),
-      composite_before: +d.composite_before,
-      composite_after: +d.composite_after,
-      delta: +d.delta,
-      direction: d.direction.trim().toLowerCase()
-    })).then(rawData => {
-      const data = scheme
-        ? rawData.filter(d => d.scheme === scheme)
-        : rawData;
+      day:    d3.timeDay.floor(new Date(d.time_bin)),
+      delta:  +d.delta,
+    })).then(rows => {
 
-      const margin = { top: 20, right: 30, bottom: 30, left: 40 };
-      const innerWidth = width - margin.left - margin.right;
-      const innerHeight = height - margin.top - margin.bottom;
-      const markerHeight = innerHeight * 0.6;
-      const barHeight = innerHeight * 0.35;
+      const wantedSchemes = schemes ?? Array.from(new Set(rows.map(r => r.scheme)));
 
-      const x = d3.scaleTime()
-        .domain(d3.extent(data, d => d.time))
-        .range([0, innerWidth]);
+      const filtered = rows.filter(r => wantedSchemes.includes(r.scheme));
 
-      const yBar = d3.scaleLinear()
+      /* group by (day, scheme) and compute Tukey stats */
+      const grouped = Array.from(
+        d3.group(filtered, r => `${+r.day}‖${r.scheme}`), // composite key
+        ([key, values]) => {
+          const [dayEpoch, scheme] = key.split("‖");
+          const sorted = values.map(v => v.delta).sort(d3.ascending);
+
+          const q1 = d3.quantileSorted(sorted, 0.25);
+          const q2 = d3.quantileSorted(sorted, 0.50);
+          const q3 = d3.quantileSorted(sorted, 0.75);
+          const iqr = q3 - q1;
+
+          const loW = d3.max([d3.min(sorted), q1 - 1.5 * iqr]);
+          const hiW = d3.min([d3.max(sorted), q3 + 1.5 * iqr]);
+
+          return {
+            day: new Date(+dayEpoch),
+            scheme,
+            q1, q2, q3,
+            loW, hiW,
+            outliers: sorted.filter(v => v < loW || v > hiW)
+          };
+        }
+      );
+
+      /* ---------- 2. Scales ---------- */
+      const days     = Array.from(new Set(grouped.map(d => +d.day))).sort();
+      const schemesD = wantedSchemes;
+
+      const margin = { top: 90, right: 40, bottom: 55, left: 70 };
+      const innerW = width  - margin.left - margin.right;
+      const innerH = height - margin.top  - margin.bottom;
+
+      const xDay = d3.scaleBand()
+        .domain(days)
+        .range([0, innerW])
+        .paddingInner(0.2);
+
+      const xScheme = d3.scaleBand()
+        .domain(schemesD)
+        .range([0, xDay.bandwidth()])
+        .paddingInner(0.15);
+
+      const y = d3.scaleLinear()
         .domain([
-          d3.min(data, d => d.delta) * 1.1,
-          d3.max(data, d => d.delta) * 1.1
+          d3.min(grouped, d => d.loW) * 1.1,
+          d3.max(grouped, d => d.hiW) * 1.1
         ])
-        .range([markerHeight + barHeight, markerHeight]);
+        .nice()
+        .range([innerH, 0]);
 
+      const colour = d3.scaleOrdinal()
+        .domain(schemesD)
+        .range(colours);
+
+      const pct = x => x * 100;
+
+      /* ---------- 3. Draw ---------- */
       const svg = d3.select(svgRef.current);
       svg.selectAll("*").remove();
+
       const g = svg.append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
+        .attr("transform", `translate(${margin.left},${margin.top})`)
+        .attr("font-family", "sans-serif");
 
-      // Event markers
-      g.selectAll("line.marker")
-        .data(data)
-        .enter().append("line")
-          .attr("class", "marker")
-          .attr("x1", d => x(d.time))
-          .attr("x2", d => x(d.time))
-          .attr("y1", 0)
-          .attr("y2", markerHeight)
-          .attr("stroke", "#666")
-          .attr("stroke-dasharray", "4 2");
+      /* 3a. Whiskers */
+      g.selectAll("line.whisker")
+        .data(grouped)
+        .enter()
+        .append("line")
+          .attr("class", "whisker")
+          .attr("x1", d => xDay(+d.day) + xScheme(d.scheme) + xScheme.bandwidth()/2)
+          .attr("x2", d => xDay(+d.day) + xScheme(d.scheme) + xScheme.bandwidth()/2)
+          .attr("y1", d => y(d.loW))
+          .attr("y2", d => y(d.hiW))
+          .attr("stroke", "#555");
 
-      g.selectAll("text.marker-label")
-        .data(data)
-        .enter().append("text")
-          .attr("class", "marker-label")
-          .attr("x", d => x(d.time) + 3)
-          .attr("y", 12)
-          .text(d => `Δ=${(d.delta * 100).toFixed(1)}%`)
-          .attr("font-size", "10px")
-          .attr("fill", "#333");
+      /* 3b. Box */
+      g.selectAll("rect.box")
+        .data(grouped)
+        .enter()
+        .append("rect")
+          .attr("class", "box")
+          .attr("x", d => xDay(+d.day) + xScheme(d.scheme))
+          .attr("width", xScheme.bandwidth())
+          .attr("y", d => y(d.q3))
+          .attr("height", d => Math.abs(y(d.q3) - y(d.q1)))
+          .attr("fill", d => colour(d.scheme))
+          .attr("opacity", 0.75);
 
-      // Delta bars
-      const barWidth = innerWidth / data.length * 0.6;
-      g.selectAll("rect.delta-bar")
-        .data(data)
-        .enter().append("rect")
-          .attr("class", "delta-bar")
-          .attr("x", d => x(d.time) - barWidth / 2)
-          .attr("y", d => yBar(Math.max(0, d.delta)))
-          .attr("width", barWidth)
-          .attr("height", d => Math.abs(yBar(d.delta) - yBar(0)))
-          .attr("fill", d => d.direction === "up" ? "#d62728" : "#2ca02c");
+      /* 3c. Median line */
+      g.selectAll("line.median")
+        .data(grouped)
+        .enter()
+        .append("line")
+          .attr("x1", d => xDay(+d.day) + xScheme(d.scheme))
+          .attr("x2", d => xDay(+d.day) + xScheme(d.scheme) + xScheme.bandwidth())
+          .attr("y1", d => y(d.q2))
+          .attr("y2", d => y(d.q2))
+          .attr("stroke", "#111")
+          .attr("stroke-width", 2);
 
-      // Axes
-      const xAxis = d3.axisBottom(x).ticks(6);
-      const yAxisLeft = d3.axisLeft(yBar)
-        .ticks(4)
-        .tickFormat(d => `${(d * 100).toFixed(0)}%`);
+      /* 3d. Whisker caps */
+      g.selectAll("line.capTop")
+        .data(grouped)
+        .enter()
+        .append("line")
+          .attr("x1", d => xDay(+d.day) + xScheme(d.scheme) + xScheme.bandwidth()*0.25)
+          .attr("x2", d => xDay(+d.day) + xScheme(d.scheme) + xScheme.bandwidth()*0.75)
+          .attr("y1", d => y(d.hiW))
+          .attr("y2", d => y(d.hiW))
+          .attr("stroke", "#555");
+
+      g.selectAll("line.capBot")
+        .data(grouped)
+        .enter()
+        .append("line")
+          .attr("x1", d => xDay(+d.day) + xScheme(d.scheme) + xScheme.bandwidth()*0.25)
+          .attr("x2", d => xDay(+d.day) + xScheme(d.scheme) + xScheme.bandwidth()*0.75)
+          .attr("y1", d => y(d.loW))
+          .attr("y2", d => y(d.loW))
+          .attr("stroke", "#555");
+
+      /* 3e. Outliers */
+      g.selectAll("circle.outlier")
+        .data(grouped.flatMap(d =>
+          d.outliers.map(v => ({ ...d, v }))
+        ))
+        .enter()
+        .append("circle")
+          .attr("cx", d => xDay(+d.day) + xScheme(d.scheme) + xScheme.bandwidth()/2)
+          .attr("cy", d => y(d.v))
+          .attr("r", 3)
+          .attr("fill", d => colour(d.scheme))
+          .attr("opacity", 0.7);
+
+      /* 3f. Axes */
+      const xAxis = d3.axisBottom(xDay)
+        .tickFormat(d3.timeFormat("%a %d"));
+
+      const yAxis = d3.axisLeft(y)
+        .ticks(6)
+        .tickFormat(d => `${pct(d).toFixed(0)} %`);
 
       g.append("g")
-        .attr("transform", `translate(0,${markerHeight + barHeight})`)
-        .call(xAxis);
+        .attr("transform", `translate(0,${innerH})`)
+        .call(xAxis)
+        .call(g => g.append("text")
+          .attr("x", innerW/2)
+          .attr("y", 42)
+          .attr("fill", "#000")
+          .attr("text-anchor", "middle")
+          .attr("font-size", "13px")
+          .text("Day of detected change"));
 
       g.append("g")
-        .call(yAxisLeft);
+        .call(yAxis)
+        .call(g => g.append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("x", -innerH/2)
+          .attr("y", -55)
+          .attr("fill", "#000")
+          .attr("text-anchor", "middle")
+          .attr("font-size", "13px")
+          .text("Δ Composite (%-points)"));
 
-    }).catch(err => {
-      console.error("Error loading/parsing changepoints CSV:", err);
-    });
-  }, [width, height, scheme]);
+      /* 3g. Titles */
+      svg.append("text")
+        .attr("x", margin.left)
+        .attr("y", 26)
+        .attr("font-size", "18px")
+        .attr("font-weight", 600)
+        .text(title);
+
+      svg.append("text")
+        .attr("x", margin.left)
+        .attr("y", 46)
+        .attr("font-size", "13px")
+        .attr("fill", "#444")
+        .text(subtitle);
+
+      /* 3h. Legend */
+      const legend = svg.append("g")
+        .attr("transform", `translate(${width - margin.right + 10},${margin.top})`)
+        .attr("font-size", "12px");
+
+      schemesD.forEach((s, i) => {
+        const row = legend.append("g").attr("transform", `translate(0,${i*20})`);
+        row.append("rect")
+          .attr("width", 14)
+          .attr("height", 14)
+          .attr("fill", colour(s));
+        row.append("text")
+          .attr("x", 20)
+          .attr("y", 11)
+          .text(s);
+      });
+
+    }).catch(err => console.error("ChangePointBoxPlotGrouped:", err));
+  }, [width, height, schemes, title, subtitle]);
 
   return (
     <svg
       ref={svgRef}
       width={width}
       height={height}
-      style={{ background: "#fafafa" }}
+      style={{ background: "#fafafa", borderRadius: 6 }}
     />
   );
 };
 
-export default TurnPoints;
+export default ChangePointBoxPlotGrouped;
