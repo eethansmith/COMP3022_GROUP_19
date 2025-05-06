@@ -1,6 +1,5 @@
 import { useState } from "react";
 import styles from "./UncertaintyTab.module.css";
-import BoxPlot from "../../Visualisations/BoxPlot";
 import HeatmapPlot from "../../Visualisations/HeatmapPlot";
 import StatusOvertime from "../../Visualisations/StatusOvertime";
 import CandleSeverityCanvas from "../../Visualisations/CandleSeverity";
@@ -25,11 +24,6 @@ export default function UncertaintyByDayTab({
                     />
                 </div>
             </div>
-            <div className={styles["grid-item"]}>
-                    <BoxPlot
-                    />
-                </div>
-
             <div className={styles["grid-item"]}>
             <CandleSeverityCanvas
                />

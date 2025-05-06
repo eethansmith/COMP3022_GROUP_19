@@ -71,7 +71,15 @@ export default function CandleSeverityCanvas({ height = 450 }) {
         const rows = text.trim().split("\n").slice(1);
 
         const parsed = rows.map(line => {
-          const [timeStr, openStr, highStr, lowStr, closeStr, volumeStr] = line.split(",");
+          const [
+            timeStr,
+            openStr,
+            highStr,
+            lowStr,
+            closeStr,
+            volumeStr
+          ] = line.split(",");
+
           return {
             interval_start: timeStr,
             open:   Number(openStr),
@@ -144,20 +152,23 @@ export default function CandleSeverityCanvas({ height = 450 }) {
     const candleW = Math.max(2, bandW * 0.6);
     const wickW   = Math.max(1, bandW * 0.2);
 
-    // fixed y-domain [-10,20]
-    const domainMin = -10;
-    const domainMax = 20;
+    // Extend y range by ±3
+    const rawMinLow  = Math.min(...data.map(d => d.low));
+    const rawMaxHigh = Math.max(...data.map(d => d.high));
+    const minLow  = rawMinLow - 3;
+    const maxHigh = rawMaxHigh + 3;
+    const maxVol  = Math.max(...data.map(d => d.volume));
     const yScale = v =>
-      margin.top + ((domainMax - v) / (domainMax - domainMin)) * candleH;
+      margin.top + ((maxHigh - v) / (maxHigh - minLow)) * candleH;
 
-    // clear
+    // Clear
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, width, height);
 
-    // axes lines (but no numeric labels)
+    // Axes
     ctx.strokeStyle = "#888";
-    ctx.lineWidth   = 1;
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(margin.left - 0.5, margin.top);
     ctx.lineTo(margin.left - 0.5, volY0 + volH);
@@ -165,7 +176,7 @@ export default function CandleSeverityCanvas({ height = 450 }) {
     ctx.lineTo(width - margin.right, volY0 + 0.5);
     ctx.stroke();
 
-    // timeline ticks & labels
+    // Timeline ticks & labels
     const firstTime = new Date(data[0].interval_start).getTime();
     const lastTime  = new Date(data[n - 1].interval_start).getTime();
     const totalMs   = lastTime - firstTime;
@@ -192,36 +203,37 @@ export default function CandleSeverityCanvas({ height = 450 }) {
       ctx.fillText(label, x, volY0 + volH + 6);
     }
 
-    // draw candles, volumes & hover
+    // Candles, volumes & hover highlight
     data.forEach((d, i) => {
       const xC = margin.left + i*bandW + bandW/2;
       const oY = yScale(d.open);
       const cY = yScale(d.close);
       const hY = yScale(d.high);
       const lY = yScale(d.low);
-      // red if severity ↑ (worse), yellow‐orange if ↓ (better)
-      const col = d.close >= d.open ? "#D32F2F" : "#FFA000";
+      const up = d.close >= d.open;
+      const bodyColor = up ? "#26a69a" : "#ef5350";
+      const grey = "#888";
 
-      // wick
-      ctx.strokeStyle = col;
-      ctx.lineWidth   = wickW;
+      // Wick (grey)
+      ctx.strokeStyle = grey;
+      ctx.lineWidth = wickW;
       ctx.beginPath();
       ctx.moveTo(xC, hY);
       ctx.lineTo(xC, lY);
       ctx.stroke();
 
-      // body
-      ctx.fillStyle = col;
+      // Body (colored)
+      ctx.fillStyle = bodyColor;
       const top = Math.min(oY, cY);
       const bh  = Math.max(1, Math.abs(oY - cY));
       ctx.fillRect(xC - candleW/2, top, candleW, bh);
 
-      // volume bar (always grey)
-      ctx.fillStyle = "#888";
-      const vH = (d.volume / Math.max(...data.map(d=>d.volume))) * volH;
+      // Volume bar (grey)
+      const vH = (d.volume / maxVol) * volH;
+      ctx.fillStyle = grey;
       ctx.fillRect(xC - candleW/2, volY0 + volH - vH, candleW, vH);
 
-      // hover highlight
+      // Hover highlight
       if (i === hoverIdx) {
         ctx.strokeStyle = "#000";
         ctx.lineWidth = 2;
@@ -234,7 +246,7 @@ export default function CandleSeverityCanvas({ height = 450 }) {
       }
     });
 
-    // tooltip
+    // Tooltip
     if (hoverIdx != null) {
       const d = data[hoverIdx];
       const xC = margin.left + hoverIdx*bandW + bandW/2;
