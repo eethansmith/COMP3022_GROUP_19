@@ -23,9 +23,11 @@
 
 /* GENERIC ITEM */
 .grid-item {
-  border: 1px solid black;
+  border: 1px solid rgb(163, 163, 163);
   border-radius: 5px;
   min-height: 300px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+
 }
 
 /* SPECIFIC ITEMS */
