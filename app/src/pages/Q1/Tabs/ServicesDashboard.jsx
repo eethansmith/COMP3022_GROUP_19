@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import * as d3 from "d3";
 
-import SplitRow   from "../../../components/SplitRow";
 import LineChart  from "../../Visualisations/LineChart";
 import ShakeMap   from "../../Visualisations/ShakeMap";
 import RadarGraph from "../../Visualisations/RadarGraph";
