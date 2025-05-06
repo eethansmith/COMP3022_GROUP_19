@@ -1,6 +1,6 @@
 .grid-container {
     display: grid;
-    grid-template-columns: 3fr 2fr;
+    grid-template-columns: 1fr;
     grid-template-rows: 1fr 1fr;
     gap: 1rem;
 }
@@ -10,11 +10,7 @@
     height: auto;
     min-height: 300px;
     padding: 10px;
-    border: 1px solid black;
+    border: 1px solid rgba(173, 173, 173, 0.74);
     border-radius: 10px;
-}
-
-.line-chart-container {
-    grid-column: 2;
-    grid-row: 1 / span 2;
+    box-shadow: 0 0 8px 5px rgba(0, 0, 0, 0.1);
 }
