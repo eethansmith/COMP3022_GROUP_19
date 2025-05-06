@@ -1,3 +1,4 @@
+
 // src/pages/Q3/Visualisations/StatusOvertime.jsx
 import { useEffect, useMemo, useState } from "react";
 
@@ -30,8 +31,8 @@ const scaleLinear = (d0, d1, r0, r1) => {
 
 const SCHEME_COLORS = {
   equal: "#2563eb",      // blue
-  intensity: "#f59e0b",  // amber
-  sqrt_n: "#10b981",     // green
+  intensity: "#10b981",  // amber
+  sqrt_n: "#f59e0b",     // green
 };
 
 // ---------------------------------------------------------------------------
@@ -183,7 +184,7 @@ export default function StatusOvertime() {
     <div style={{ width: "100%" }}>
       {/* Title */}
       <h4 style={{ textAlign: "center", marginBottom: "8px" }}>
-        Composite Severity &amp; Report Volume over Time
+        Reported Severity &amp; Report Volume
       </h4>
 
       <svg
@@ -271,9 +272,9 @@ export default function StatusOvertime() {
           {/* Axis Labels */}
           <text
             x={W / 2}
-            y={H + 45}
+            y={H + 50}
             textAnchor="middle"
-            fontSize={12}
+            fontSize={25}
             fontWeight="500"
           >
             Time (UTC)
@@ -281,10 +282,10 @@ export default function StatusOvertime() {
           <text
             transform={`translate(${-50},${H / 2}) rotate(-90)`}
             textAnchor="middle"
-            fontSize={12}
+            fontSize={25}
             fontWeight="500"
           >
-            Severity Index
+            Reported Severity
           </text>
         </g>
       </svg>
@@ -305,14 +306,14 @@ export default function StatusOvertime() {
             style={{ display: "flex", alignItems: "center", gap: "6px" }}
           >
             <svg width="16" height="16">
-              <rect width="16" height="16" fill={color} opacity={0.6} />
+              <rect width="16" height="16" fill={color} opacity={0.4} />
             </svg>
             <small>{scheme}</small>
           </div>
         ))}
         {/* bars */}
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <svg width="16" height="16">
+        <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+          <svg width="20" height="20">
             <rect width="16" height="16" fill="#ddd" />
           </svg>
           <small>Total reports</small>
@@ -321,3 +322,19 @@ export default function StatusOvertime() {
     </div>
   );
 }
+
+// ------- ------------------------------------------------------------------
+/*
+column	type	description
+scheme	factor	Weighting recipe used when rolling the 19 locations up to one island value.
+• equal — every location gets weight 1
+• sqrt_n — weight = √(number of reports)
+• intensity — weight proportional to that location’s average shake_intensity
+time_bin	ISO-8601	Start-time of the 1-hour bin (YYYY-MM-DDThh:mm:ssZ, always UTC)
+composite	numeric [0–1]	Severity index for the island at that hour, averaged with the chosen weights. It is a weighted mean of the 6 normalised attributes.
+samp_uncertainty	numeric [0–1]	Island-level sampling uncertainty = weighted mean of location SEs (each SE scaled 0–1). Captures volatility caused by small sample sizes.
+cover_uncertainty	numeric [0–1]	Island-level coverage uncertainty = weighted mean of missing-rate (fraction of blank cells). Flags hours where attributes were often unreported.
+combined_uncertainty	numeric [0–2]	samp_uncertainty + cover_uncertainty — a single uncertainty envelope for quick plotting.
+n_reports	integer	Total number of resident reports that landed in this hour, all locations combined.
+
+*/

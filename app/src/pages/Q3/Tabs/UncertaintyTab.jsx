@@ -1,7 +1,7 @@
 import { useState } from "react";
 import styles from "./UncertaintyTab.module.css";
 import BoxPlot from "../../Visualisations/BoxPlot";
-import UncertaintyLineChart from "../../Visualisations/UncertaintyLineChart";
+import HeatmapPlot from "../../Visualisations/HeatmapPlot";
 import StatusOvertime from "../../Visualisations/StatusOvertime";
 
 
@@ -25,7 +25,7 @@ export default function UncertaintyByDayTab({
                 </div>
 
                 <div className={`${styles["grid-item"]} ${styles["line-chart-container"]}`}>
-                    <UncertaintyLineChart
+                    <HeatmapPlot
                         day={day}
                     />
                 </div>
