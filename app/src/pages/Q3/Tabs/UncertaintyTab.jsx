@@ -17,11 +17,19 @@ export default function UncertaintyByDayTab({
 
         <div className={styles["body"]}>
             <div className={styles["grid-container"]}>
+
+                <div className={styles["grid-item"]}>
+                </div>
+            </div>
             <div className={styles["grid-item"]}>
-                <CandleSeverityCanvas/>
-                <HeatmapPlot/>
+            <CandleSeverityCanvas
+               />
             </div>
-            </div>
+
+            <div className={styles["grid-item"]}>
+                    <HeatmapPlot
+                    />
+                </div>
         </div>
     </div>)
 }
