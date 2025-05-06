@@ -23,7 +23,7 @@ const Question2 = () => {
     () =>
       d3.scaleLinear()
         .domain([0, 10])
-        .range(["#008B00", "#AA0000"])
+        .range(["#63d12c", "#c93030"])
         .clamp(true),
     []
   );

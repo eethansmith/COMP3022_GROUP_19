@@ -70,7 +70,7 @@ export default function ServicesDashboard({
         }`}
       >
         {selectedRegionData ? (
-          <><span className={styles["region-name"]}>{selectedRegionData.name}</span> selected</>
+          <><span className={styles["region-name"]}>{selectedRegionData.name}</span></>
         ) : (
           <>⚠️ <span className={styles["select-prompt"]}>SELECT A REGION FOR MORE INFORMATION</span></>
         )}

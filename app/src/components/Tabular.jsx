@@ -1,43 +1,49 @@
 import { useState } from 'react';
+// Using the styles from the enhanced CSS module we created
 import styles from "./Tabular.module.css";
 
 // Tab Factory for creating tabs
 export const TabFactory = (header, content) => ({header, content});
 
-// The tabular view itself
+// Enhanced Tabular component with improved design
 const Tabular = ({ tabs }) => {
+  const [activeTabIndex, setActiveTab] = useState(0);
 
-    const [activeTabIndex, setActiveTab] = useState(0); // Create a state initially 0.
+  // Demo tabs for preview
+  const demoTabs = tabs || [
+    TabFactory('Dashboard', <div className="p-4">Dashboard Content</div>),
+    TabFactory('Analytics', <div className="p-4">Analytics Content</div>),
+    TabFactory('Settings', <div className="p-4">Settings Content</div>)
+  ];
 
-    return (
-        <div className = {styles["container"]}>
-            <div className = {styles["header-container"]}>
-
-                {/* Map tabs by their header */}
-                {tabs.map((tab, index) => {
-                    // Create a btton for each tab labelled with its header
-                    return (
-                        <button
-                            key = {index}
-                            className = {`${styles["header-button"]} ${index === activeTabIndex ? styles["active"] : styles["inactive"]}`}
-                            onClick = {(() => setActiveTab(index))}
-                        >
-                            {tab.header} {/* Set the Header as the label */}
-                        </button>
-                    );
-                })}
-                <div className={styles["header-fill"]}></div>
-            </div>
-
-            {/* Display the selected tab's content */}
-            <div className= {styles["content"]}>
-
-                {/* Set the content as the active tab's content */}
-                {tabs[activeTabIndex]?.content}
-            </div>
+  return (
+    <div className="w-full max-w-3xl mx-auto">
+      <div className={styles["container"]}>
+        <div className={styles["header-container"]}>
+          {demoTabs.map((tab, index) => (
+            <button
+              key={index}
+              className={`${styles["header-button"]} ${
+                index === activeTabIndex ? styles["active"] : styles["inactive"]
+              }`}
+              onClick={() => setActiveTab(index)}
+            >
+              {tab.header}
+            </button>
+          ))}
+          <div className={styles["header-fill"]}></div>
         </div>
-    )
 
-}
+        <div className={styles["content"]}>
+          {demoTabs[activeTabIndex]?.content}
+        </div>
+      </div>
+    </div>
+  );
+};
 
+// Default export for the component
 export default Tabular;
+
+// Also export the styles so they can be accessed directly
+export { styles };
