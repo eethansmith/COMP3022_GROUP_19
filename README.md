@@ -1,7 +1,8 @@
 # St. Himarks Quake Responders Dashboard
 
 **COMP3022 Data Visualization Project**
-/n **Group 19:** Abdul, Ethan, Jacob, Nithya
+
+**Group 19:** Abdul, Ethan, Jacob, Nithya
 
 ---
 
