@@ -33,7 +33,7 @@ const Question2 = () => {
     setGeoData(geoDataJson);
 
     //Load Q2 Uncertainty Score CSV
-    d3.csv(process.env.PUBLIC_URL + "/data/resources/mc1-q2-uncertainty-scores.csv").then(data => {
+    d3.csv(process.env.PUBLIC_URL + "/data/resources/Q2/uncertainty-scores.csv").then(data => {
 
       const d = [];
       const map = new Map();

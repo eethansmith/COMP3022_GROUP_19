@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 
 // Adjust to wherever your CSV lives:
 const CSV_PATH =
-  process.env.PUBLIC_URL + "/data/resources/mc1-q2-uncertainty-scores.csv";
+  process.env.PUBLIC_URL + "/data/resources/Q2/uncertainty-scores.csv";
 
 const HeatmapPlot = ({
   selectedRegion,

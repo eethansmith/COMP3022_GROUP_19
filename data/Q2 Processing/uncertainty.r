@@ -1,17 +1,4 @@
-####################################################################
-# 
-# Base‐R pipeline to:
-#  1. Clean & bin raw reports
-#  2. Compute location‐level summaries (mean, SD, SE)
-#  3. Compute island‐level summaries (equal vs intensity weights)
-#  4. Compute composite index & its uncertainty
-#  5. Compute change‐metrics (deltas, significance)
-#
-# Outputs CSVs ready for visualization under:
-#   app/public/data/resources/
-####################################################################
-
-### 0. Parameters & setup ------------------------------------------
+# Parameters & setup 
 input_file      <- "data/resources/mc1-report-data.csv"
 output_dir      <- "app/public/data/resources/Q3-"
 bin_width_hours <- 6
@@ -28,7 +15,7 @@ shake_col <- "shake_intensity"
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
 
-### 1. Load & preprocess -------------------------------------------
+# Load & preprocess
 df <- read.csv(input_file, stringsAsFactors = FALSE)
 
 # Convert timestamps & compute relative time (hours since first report)
@@ -56,7 +43,7 @@ for (j in attrs) {
 df$shake_intensity_norm <- df[[shake_col]] / 10
 
 
-### 2. Location-level summaries -----------------------------------
+# Location-level summaries
 # We'll build a long table: one row per (location, bin, attribute)
 
 # Split by location+bin
@@ -100,15 +87,15 @@ write.csv(
 )
 
 
-### 3. Island-level summaries -------------------------------------
+# Island-level summaries -------------------------------------
 # Compute weighting schemes
 
-# 3a. Equal weights
+# Equal weights
 locations     <- sort(unique(df$location))
 w_equal       <- rep(1/length(locations), length(locations))
 names(w_equal) <- locations
 
-# 3b. Intensity‐based weights (baseline = mean shake per location)
+# Intensity‐based weights (baseline = mean shake per location)
 baseline_shake <- tapply(df$shake_intensity_norm,
                          df$location,
                          mean,
@@ -167,7 +154,7 @@ write.csv(
 )
 
 
-### 4. Composite index & uncertainty -----------------------------
+# Composite index & uncertainty
 # Equal alpha weights across all attributes (excluding shake_intensity if desired)
 core_attrs <- attrs  # or include shake_col as well
 alpha <- rep(1/length(core_attrs), length(core_attrs))
@@ -208,8 +195,7 @@ write.csv(
   row.names = FALSE
 )
 
-
-### 5. Change metrics (deltas & significance) ---------------------
+# Change metrics (deltas & significance)
 change_list <- do.call(rbind, lapply(split(comp_list, comp_list$scheme), function(sub) {
   sub <- sub[order(sub$bin_start_rel), ]
   n  <- nrow(sub)
@@ -241,7 +227,7 @@ write.csv(
 )
 
 
-### 6. Coverage heatmap data --------------------------------------
+# Coverage heatmap data
 # Number of reports per (location, bin)
 coverage <- aggregate(
   total_reports ~ location + bin_start_rel + bin_timestamp,
@@ -254,5 +240,3 @@ write.csv(
   file = file.path(output_dir, "coverage.csv"),
   row.names = FALSE
 )
-
-message("Data preparation complete. CSVs written to: ", output_dir)
