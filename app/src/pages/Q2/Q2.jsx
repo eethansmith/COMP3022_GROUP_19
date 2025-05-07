@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import * as d3 from "d3";
 import Header from "../../components/Header";
-import Q2ShakeMap from "../Visualisations/Q2ShakeMap.jsx";
-import Q2BarChart from "../Visualisations/Q2BarChart";
 import styles from "./Q2.module.css";
 
 //Import StHimark map directly
