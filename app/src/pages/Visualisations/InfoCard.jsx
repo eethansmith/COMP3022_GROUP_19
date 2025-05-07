@@ -12,7 +12,7 @@ export default function InfoCard({
     return (
       <div style={styles.wrapper}>
         <div style={styles.card}>
-          <p style={styles.message}>No data for region {selectedRegion}.</p>
+          <p style={styles.message}>No region selected.</p>
         </div>
       </div>
     );

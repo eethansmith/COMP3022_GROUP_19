@@ -61,7 +61,7 @@ const ShakeMap = ({
     g.append("rect")
       .attr("width", innerWidth)
       .attr("height", innerHeight)
-      .attr("fill", "#f0f9ff")
+      .attr("fill", "#fff")
       .attr("rx", 8)
       .attr("ry", 8);
 

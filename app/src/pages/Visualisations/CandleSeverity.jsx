@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import PropTypes from "prop-types";
 
-export default function CandleSeverityCanvas({ height = 450 }) {
+export default function CandleSeverityCanvas({ height = 450, currentIdx, setCurrentIdx }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const [width, setWidth] = useState(800);
@@ -219,17 +219,6 @@ export default function CandleSeverityCanvas({ height = 450 }) {
       ctx.fillText(price.toFixed(2), margin.left - 8, y);
     }
 
-    // Title with shadow
-    ctx.fillStyle = "#212529";
-    ctx.font = "bold 16px Inter, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(
-      "Reported Severity to Volume of Reports",
-      width / 2,
-      margin.top / 2
-    );
-
     // Axes
     ctx.strokeStyle = "#adb5bd";
     ctx.lineWidth = 1.5;
@@ -360,6 +349,36 @@ export default function CandleSeverityCanvas({ height = 450 }) {
         candleW,
         vScaled
       );
+
+      if (i === currentIdx) {
+        // Shadow for candle
+        ctx.shadowColor = "rgba(0, 0, 0, 0.2)";
+        ctx.shadowBlur = 5;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        
+        // Highlight candle
+        ctx.strokeStyle = "#777";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(
+          xC - candleW / 2 - 1,
+          Math.min(hY, top) - 1,
+          candleW + 2,
+          Math.max(lY - hY, bh) + 2
+        );
+        
+        // Highlight volume
+        ctx.strokeRect(
+          xC - candleW / 2 - 1,
+          volY0 - 1,
+          candleW + 2,
+          vScaled + 2
+        );
+        
+        // Reset shadow
+        ctx.shadowColor = "transparent";
+        ctx.shadowBlur = 0;
+      }
 
       // Hover highlight with glow effect
       if (i === hoverIdx) {

@@ -1,68 +1,52 @@
-import React, { useState, useEffect } from "react";
+// D3Heatmap.jsx
+import React, { useEffect, useRef, useState } from 'react';
+import * as d3 from 'd3';
+import styles from './HeatmapPlot.module.css';
 
-// Path to your CSV in the public folder
 const CSV_PATH = process.env.PUBLIC_URL + "/data/resources/Q3/location-time-matrix.csv";
+const AREA_NAME = {
+  1: "Palace Hills",
+  2: "Northwest",
+  3: "Old Town",
+  4: "Safe Town",
+  5: "Southwest",
+  6: "Downtown",
+  7: "Wilson Forest",
+  8: "Scenic Vista",
+  9: "Broadview",
+ 10: "Chapparal",
+ 11: "Terrapin Springs",
+ 12: "Pepper Mill",
+ 13: "Cheddarford",
+ 14: "Easton",
+ 15: "Weston",
+ 16: "Southton",
+ 17: "Oak Willow",
+ 18: "East Parton",
+ 19: "West Parton"
+};
 
-const HeatmapPlot = () => {
-  const [dataMap, setDataMap] = useState({});
-  const [locations, setLocations] = useState([]);
-  const [timeBins, setTimeBins] = useState([]);
+export default function D3Heatmap({ currentIdx, setCurrentIdx }) {
+  const containerRef = useRef();
+  const svgRef = useRef();
+  const tooltipRef = useRef();
 
-  useEffect(() => {
-    fetch(CSV_PATH)
-      .then((r) => r.text())
-      .then((text) => {
-        const rows = parseCSV(text);
-        const map = {};
-        const locSet = new Set();
-        const timeSet = new Set();
+  const [data, setData] = useState([]);
+  const [error, setError] = useState(null);
+  const [selectedMetric, setSelectedMetric] = useState('composite_severity');
+  const [dimensions, setDimensions] = useState({
+    margin: { top: 50, right: 25, bottom: 20, left: 160 },
+    width: 20,
+    height: 20,
+    cellSize: 12
+  });
 
-        rows.forEach((row) => {
-          const loc = row.location;
-          const time = row.time_bin;
-          locSet.add(loc);
-          timeSet.add(time);
-
-          if (!map[loc]) map[loc] = {};
-          map[loc][time] = {
-            n_reports: parseInt(row.n_reports, 10),
-            composite_severity: parseFloat(row.composite_severity),
-            missing_rate: parseFloat(row.missing_rate),
-            local_uncertainty: parseFloat(row.local_uncertainty),
-          };
-        });
-
-        const times = Array.from(timeSet).sort();
-        const locs = Array.from(locSet).sort((a, b) => {
-          const maxA = Math.max(
-            ...times.map((t) => map[a][t]?.composite_severity || 0)
-          );
-          const maxB = Math.max(
-            ...times.map((t) => map[b][t]?.composite_severity || 0)
-          );
-          return maxB - maxA;
-        });
-
-        setDataMap(map);
-        setTimeBins(times);
-        setLocations(locs);
-      });
-  }, []);
-
-  // simple green→red severity ramp
-  const getColor = (v) => {
-    if (v == null) return "#eee";
-    const r = Math.round(255 * v);
-    const g = Math.round(255 * (1 - v));
-    return `rgb(${r},${g},0)`;
-  };
-
-  // naive CSV parser
+  // Parse CSV text into array of objects
   const parseCSV = (text) => {
-    const [headerLine, ...lines] = text.trim().split("\n");
-    const headers = headerLine.split(",");
-    return lines.map((line) => {
-      const cols = line.split(",");
+    const [headerLine, ...lines] = text.trim().split(/\r?\n/);
+    const headers = headerLine.split(',');
+    return lines.map(line => {
+      const cols = line.split(',');
       return headers.reduce((obj, h, i) => {
         obj[h] = cols[i];
         return obj;
@@ -70,101 +54,216 @@ const HeatmapPlot = () => {
     });
   };
 
-  // decide tick interval to show ~10 labels
-  const tickInterval = Math.ceil(timeBins.length / 10);
+  // Convert strings to numbers and map names
+  const processData = (rawData) =>
+    rawData.map(d => ({
+      location: d.location,
+      name: AREA_NAME[d.location],
+      time_bin: d.time_bin,
+      n_reports: +d.n_reports,
+      composite_severity: +d.composite_severity,
+      missing_rate: +d.missing_rate,
+      local_uncertainty: +d.local_uncertainty
+    }));
+
+  // Fetch and parse CSV on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const resp = await fetch(CSV_PATH);
+        if (!resp.ok) throw new Error(`Failed to load data: ${resp.status}`);
+        const text = await resp.text();
+        setData(processData(parseCSV(text)));
+      } catch (e) {
+        setError(e.message);
+      }
+    })();
+  }, []);
+
+  // Update container width on resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      const w = containerRef.current.clientWidth;
+      setDimensions(d => ({
+        ...d,
+        width: Math.max(600, w - 40)
+      }));
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Draw heatmap whenever data, metric, or currentIdx changes
+  useEffect(() => {
+    if (error || !data.length) return;
+
+    d3.select(svgRef.current).selectAll('*').remove();
+    const { margin, cellSize, width: stateW, height: stateH } = dimensions;
+
+    // Derive times and sort locations
+    const times = Array.from(new Set(data.map(d => d.time_bin))).sort();
+    const sortedLocs = Array.from(new Set(data.map(d => d.location))).sort((a, b) => +a - +b);
+
+    const svgW = Math.max(
+      stateW,
+      times.length * cellSize + margin.left + margin.right
+    );
+    const svgH = Math.max(
+      stateH,
+      sortedLocs.length * cellSize + margin.top + margin.bottom
+    );
+
+    // Setup SVG
+    d3.select(svgRef.current)
+      .attr('width', svgW)
+      .attr('height', svgH);
+
+    const g = d3.select(svgRef.current)
+      .append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Scales
+    const xScale = d3.scaleBand()
+      .domain(times)
+      .range([0, times.length * cellSize])
+      .padding(0.05);
+
+    const yScale = d3.scaleBand()
+      .domain(sortedLocs)
+      .range([0, sortedLocs.length * cellSize])
+      .padding(0.05);
+
+    const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([0, 1]);
+
+    // Tooltip
+    const tooltip = d3.select(tooltipRef.current)
+      .style('position', 'absolute')
+      .style('visibility', 'hidden')
+      .style('background', '#ffffff')
+      .style('border', '1px solid #e2e8f0')
+      .style('border-radius', '8px')
+      .style('padding', '12px')
+      .style('box-shadow', '0 8px 16px rgba(0,0,0,0.15)')
+      .style('font-size', '13px')
+      .style('transition', 'opacity 0.2s ease-in-out')
+      .style('opacity', 0);
+
+    // X labels
+    const tickInterval = Math.ceil(times.length / 8);
+    g.append('g')
+      .selectAll('text')
+      .data(times)
+      .enter()
+      .filter((_, i) => i % tickInterval === 0)
+      .append('text')
+      .attr('x', d => xScale(d) + xScale.bandwidth() / 2)
+      .attr('y', -10)
+      .attr('transform', d => `rotate(-45,${xScale(d) + xScale.bandwidth()/2},-10)`)    
+      .style('text-anchor', 'start')
+      .style('font-size', '11px')
+      .style('fill', '#4a5568')
+      .text(d => d.slice(11, 16));
+
+    // Y labels
+    g.append('g')
+      .selectAll('text')
+      .data(sortedLocs)
+      .enter()
+      .append('text')
+      .attr('x', -10)
+      .attr('y', d => yScale(d) + yScale.bandwidth() / 2)
+      .attr('text-anchor', 'end')
+      .attr('dominant-baseline', 'middle')
+      .style('font-size', '12px')
+      .style('fill', '#2d3748')
+      .text(d => AREA_NAME[d]);
+
+    // Cells
+    g.selectAll('rect')
+      .data(data)
+      .enter()
+      .append('rect')
+      .attr('x', d => xScale(d.time_bin))
+      .attr('y', d => yScale(d.location))
+      .attr('width', xScale.bandwidth())
+      .attr('height', yScale.bandwidth())
+      .attr('fill', d => d[selectedMetric] ? colorScale(d[selectedMetric] / 10) : '#cbd5e0')
+      .attr('opacity', d => d.local_uncertainty ? 1 - Math.min(d.local_uncertainty / 2, 1) : 1)
+      .attr('stroke', d => d.time_bin === times[currentIdx] ? '#FFF' : null)
+      .attr('stroke-width', d => d.time_bin === times[currentIdx] ? 2 : 0)
+      .on('mouseover', function(event, d) {
+        d3.select(this).attr('stroke', '#FFF').attr('stroke-width', 4);
+        tooltip.html(`
+          <div style="font-weight:bold;margin-bottom:6px;border-bottom:1px solid #e2e8f0; padding-bottom:4px;">
+            ${d.name}
+          </div>
+          <div style="display:grid;grid-template-columns:auto auto;gap:6px;font-size:13px;">
+            <span style="color:#4a5568">Time:</span><span style="font-weight:500">${d.time_bin.slice(11,16)}</span>
+            <span style="color:#4a5568">Reports:</span><span style="font-weight:500">${d.n_reports}</span>
+            <span style="color:#4a5568">Severity:</span><span style="font-weight:500">${d.composite_severity.toFixed(2)}</span>
+            <span style="color:#4a5568">Missing:</span><span style="font-weight:500">${(d.missing_rate*100).toFixed(1)}%</span>
+            <span style="color:#4a5568">Uncertainty:</span><span style="font-weight:500">${d.local_uncertainty.toFixed(2)}</span>
+          </div>
+        `);
+        const bbox = tooltip.node().getBoundingClientRect();
+        let x = event.pageX + 12;
+        let y = event.pageY + 12;
+        if (x + bbox.width > window.innerWidth) x = event.pageX - bbox.width - 12;
+        if (y + bbox.height > window.innerHeight) y = event.pageY - bbox.height - 12;
+        tooltip.style('left', `${x}px`).style('top', `${y}px`).style('visibility','visible').style('opacity', 1);
+      })
+      .on('mouseout', function(event, d) {
+        d3.select(this)
+          .attr('stroke', d => d.time_bin === times[currentIdx] ? '#FFF' : null)
+          .attr('stroke-width', d => d.time_bin === times[currentIdx] ? 2 : 0);
+        tooltip.style('visibility','hidden').style('opacity', 0);
+      })
+      .on('click', function(event, d) {
+        setCurrentIdx(times.indexOf(d.time_bin))
+      });
+
+    // Legend omitted for brevity
+  }, [data, error, dimensions.width, selectedMetric, currentIdx]);
+
+  const metrics = [
+    { value: 'composite_severity', label: 'Severity' },
+    { value: 'n_reports', label: 'Number of Reports' },
+    { value: 'missing_rate', label: 'Missing Rate' },
+    { value: 'local_uncertainty', label: 'Uncertainty' }
+  ];
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center w-full h-64 text-red-500">
+        <span>Error: {error}</span>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ width: '100%', overflow: 'auto', fontFamily: 'sans-serif' }}>
-      {/* Legend */}
-      <div style={{ display: 'flex', alignItems: 'center', margin: '8px 0', fontSize: '12px' }}>
-        <span style={{ marginRight: '8px' }}>Low</span>
-        <div style={{ flex: 1, height: '8px', background: 'linear-gradient(to right, green, red)' }} />
-        <span style={{ marginLeft: '8px' }}>High</span>
-      </div>
-
-      {/* Axis Labels */}
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
-        <div style={{ width: '150px', textAlign: 'center', fontSize: '12px' }}>Location</div>
-        <div style={{ flex: 1, textAlign: 'center', fontSize: '12px' }}>Time (HH:MM)</div>
-      </div>
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: `150px repeat(${timeBins.length}, 12px)`,
-          gridAutoRows: '12px',
-        }}
-      >
-        {/* top-left blank */}
-        <div style={{ gridColumn: 1, gridRow: 1 }} />
-
-        {/* Time ticks */}
-        {timeBins.map((t, i) => (
-          <div
-            key={t}
-            style={{
-              gridColumn: i + 2,
-              gridRow: 1,
-              textAlign: 'center',
-              fontSize: '8px',
-              padding: '1px',
-              visibility: i % tickInterval === 0 ? 'visible' : 'hidden',
-            }}
+    <div ref={containerRef} className="w-full h-full font-sans">
+      <div className={styles.controls}>
+        <div className={styles.metricSelector}>
+          <label htmlFor="metric-select" className={styles.label}>Metric</label>
+          <select
+            id="metric-select"
+            value={selectedMetric}
+            onChange={e => setSelectedMetric(e.target.value)}
+            className={styles.select}
           >
-            {t.slice(11, 16)}
-          </div>
-        ))}
-
-        {/* Data Cells */}
-        {locations.map((loc, ri) => (
-          <React.Fragment key={loc}>
-            {/* Location Labels */}
-            <div
-              style={{
-                gridColumn: 1,
-                gridRow: ri + 2,
-                fontSize: '10px',
-                padding: '1px',
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                overflow: 'hidden',
-              }}
-              title={loc}
-            >
-              {loc}
-            </div>
-
-            {/* Cells */}
-            {timeBins.map((t, ci) => {
-              const c = dataMap[loc]?.[t];
-              const sev = c?.composite_severity;
-              const unc = c?.local_uncertainty;
-              const opacity = unc != null ? 1 - Math.min(unc / 2, 1) : 1;
-              const bg = getColor(sev);
-              const title = c
-                ? `Reports: ${c.n_reports}\nMissing rate: ${c.missing_rate}\nSeverity: ${sev}`
-                : '';
-
-              return (
-                <div
-                  key={t}
-                  style={{
-                    gridColumn: ci + 2,
-                    gridRow: ri + 2,
-                    width: '12px',
-                    height: '12px',
-                    backgroundColor: bg,
-                    opacity,
-                  }}
-                  title={title}
-                />
-              );
-            })}
-          </React.Fragment>
-        ))}
+            {metrics.map(m => (
+              <option key={m.value} value={m.value}>{m.label}</option>
+            ))}
+          </select>
+        </div>
+        <div className={styles.info}>Hover cells for details</div>
+      </div>
+      <div className="relative overflow-auto border rounded-md max-h-96 shadow-inner">
+        <svg ref={svgRef} />
+        <div ref={tooltipRef} />
       </div>
     </div>
   );
-};
-
-export default HeatmapPlot;
+}

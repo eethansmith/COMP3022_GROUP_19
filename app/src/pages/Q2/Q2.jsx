@@ -10,6 +10,29 @@ import ShakeMap from "../Visualisations/ShakeMap.jsx";
 import BarChart from "../Visualisations/BarChart.jsx";
 import HeatmapPlot from "../Visualisations/HeatmapPlot-SD.jsx";
 
+const AREA_NAME = {
+  1: "Palace Hills",
+  2: "Northwest",
+  3: "Old Town",
+  4: "Safe Town",
+  5: "Southwest",
+  6: "Downtown",
+  7: "Wilson Forest",
+  8: "Scenic Vista",
+  9: "Broadview",
+ 10: "Chapparal",
+ 11: "Terrapin Springs",
+ 12: "Pepper Mill",
+ 13: "Cheddarford",
+ 14: "Easton",
+ 15: "Weston",
+ 16: "Southton",
+ 17: "Oak Willow",
+ 18: "East Parton",
+ 19: "West Parton"
+};
+
+
 const Question2 = () => {
 
   const [geoData, setGeoData] = useState(null);
@@ -78,25 +101,24 @@ const Question2 = () => {
   return (
     <div className={styles.body}>
       <Header />
-      <h3>Use visual analytics to show uncertainty in the data. Compare the reliability of neighborhood reports.</h3>
-      <p>Selected region: {selectedRegion}</p>
+
+      <h1>Report Analytics Dashboard</h1>
 
       <div className={styles["grid-container"]}>
 
-        <div className={`${styles["grid-item"]} ${styles["bar-chart-container"]}`}>
-        <h2>Regions by Uncertainty Scoring</h2>
-          <BarChart
-            data={scoresData}
-            scoresMap={scoresMap}
+
+        <div className={`${styles["grid-item"]} ${styles["heatmap-container"]}`}>
+          <h3>Breakdown by Region</h3>
+          <HeatmapPlot
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
+            infocardMap={infocardMap}
             colorScale={colorScale}
-            className="mt-10"
           />
         </div>
 
         <div className={`${styles["grid-item"]} ${styles["shake-map-container"]}`}>
-        <h2>St. Himark Region Map</h2>
+        <h3>St. Himark Region Map</h3>
           <ShakeMap
             data={geoData}
             scoresMap={scoresMap}
@@ -114,15 +136,17 @@ const Question2 = () => {
           />
         </div>
 
-        <div className={`${styles["grid-item"]} ${styles["table-container"]}`}>
-        <HeatmapPlot
-          selectedRegion={selectedRegion}
-          setSelectedRegion={setSelectedRegion}
-          infocardMap={infocardMap}
-          colorScale={colorScale}
-        />
+        <div className={`${styles["grid-item"]} ${styles["bar-chart-container"]}`}>
+        <h3>Regions by Uncertainty Scoring</h3>
+          <BarChart
+            data={scoresData}
+            scoresMap={scoresMap}
+            selectedRegion={selectedRegion}
+            setSelectedRegion={setSelectedRegion}
+            colorScale={colorScale}
+            className="mt-10"
+          />
         </div>
-
       </div>
 
 
