@@ -1,36 +1,30 @@
 import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 
 // adjust to wherever your CSV now lives:
 const CSV_PATH =
   process.env.PUBLIC_URL + "/data/resources/mc1-q2-uncertainty-scores.csv";
 
-const HeatmapPlot = () => {
+const HeatmapPlot = ({ selectedRegion, setSelectedRegion, infocardMap }) => {
   const [dataMap, setDataMap] = useState({});
   const [locations, setLocations] = useState([]);
-  const [maxVals, setMaxVals] = useState({
-    std: 0,
-    missing: 0,
-    reports: 0,
-    uncertainty: 0,
-  });
+  const [maxVals, setMaxVals] = useState({ std: 0, missing: 0, reports: 0, uncertainty: 0 });
+  const [hovered, setHovered] = useState(null);
 
   useEffect(() => {
     fetch(CSV_PATH)
       .then((r) => r.text())
       .then((text) => {
         const rows = parseCSV(text);
-
         const map = {};
         const locSet = new Set();
-        let maxStd = 0,
-          maxMissing = 0,
-          maxReports = 0,
-          maxUnc = 0;
+        let maxStd = 0, maxMissing = 0, maxReports = 0, maxUnc = 0;
 
         rows.forEach((row) => {
           const loc = row.location;
           if (!loc) return;
 
+          // parse the metrics
           const std = parseFloat(row.std_dev_buildings);
           const missing = parseFloat(row.missing_shake_pct);
           const reports = parseInt(row.report_count, 10);
@@ -48,28 +42,18 @@ const HeatmapPlot = () => {
         setDataMap(map);
         setLocations(
           Array.from(locSet).sort((a, b) => {
-            const na = Number(a),
-              nb = Number(b);
-            return !isNaN(na) && !isNaN(nb)
-              ? na - nb
-              : a.localeCompare(b);
+            const na = Number(a), nb = Number(b);
+            return !isNaN(na) && !isNaN(nb) ? na - nb : a.localeCompare(b);
           })
         );
-        setMaxVals({
-          std: maxStd,
-          missing: maxMissing,
-          reports: maxReports,
-          uncertainty: maxUnc,
-        });
+        setMaxVals({ std: maxStd, missing: maxMissing, reports: maxReports, uncertainty: maxUnc });
       });
   }, []);
 
   // simple CSV parser that strips quotes
   const parseCSV = (text) => {
     const [headerLine, ...lines] = text.trim().split("\n");
-    const headers = headerLine
-      .split(",")
-      .map((h) => h.replace(/^"|"$/g, ""));
+    const headers = headerLine.split(",").map((h) => h.replace(/^"|"$/g, ""));
     return lines.map((line) => {
       const cols = line.split(",");
       const obj = {};
@@ -101,72 +85,79 @@ const HeatmapPlot = () => {
   };
 
   const metrics = [
-    { key: "std", label: "Std Dev", channel: "blue" },
-    { key: "missing", label: "Missing Shake %", channel: "magenta" },
-    { key: "reports", label: "Report Count", channel: "green" },
-    { key: "uncertainty", label: "Uncertainty", channel: "cyan" },
+    { key: "std",        label: "Std Dev",         channel: "blue"    },
+    { key: "missing",    label: "Missing Shake %",channel: "magenta" },
+    { key: "reports",    label: "Report Count",    channel: "green"   },
+    { key: "uncertainty",label: "Uncertainty",     channel: "cyan"    },
   ];
 
   return (
-    <div style={{ width: "100%", overflow: "auto", fontFamily: "sans-serif" }}>
+    <div style={{ width: "100%", overflowX: "auto", fontFamily: "sans-serif" }}>
       {/* header row */}
       <div
         style={{
           display: "grid",
           gridTemplateColumns: `150px repeat(${metrics.length}, 80px)`,
-          marginBottom: 4,
+          marginBottom: 8,
         }}
       >
         <div />
         {metrics.map((m) => (
           <div
             key={m.key}
-            style={{ textAlign: "center", fontSize: 12, padding: "4px 0" }}
+            style={{ textAlign: "center", fontSize: 12, fontWeight: 600 }}
           >
             {m.label}
           </div>
         ))}
       </div>
 
-      {/* heatmap grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: `150px repeat(${metrics.length}, 80px)`,
-          gridAutoRows: "20px",
-        }}
-      >
-        {locations.map((loc, ri) => (
-          <React.Fragment key={loc}>
+      {/* rows */}
+      {locations.map((locStr) => {
+        const id = Number(locStr);
+        const regionName = infocardMap.get(id)?.name || locStr;
+        const isSel = id === selectedRegion;
+        const isHover = id === hovered;
+
+        return (
+          <div
+            key={id}
+            onClick={() => setSelectedRegion(id)}
+            onMouseEnter={() => setHovered(id)}
+            onMouseLeave={() => setHovered(null)}
+            style={{
+              display: "grid",
+              gridTemplateColumns: `150px repeat(${metrics.length}, 80px)`,
+              backgroundColor: isSel
+                ? "rgba(100,150,255,0.2)"
+                : isHover
+                ? "rgba(200,200,200,0.1)"
+                : "transparent",
+              cursor: "pointer",
+            }}
+          >
             <div
               style={{
-                gridColumn: 1,
-                gridRow: ri + 1,
+                padding: "4px",
                 fontSize: 10,
-                padding: "2px",
+                fontWeight: isSel ? 600 : 400,
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
               }}
-              title={`Location ${loc}`}
+              title={regionName}
             >
-              {loc}
+              {regionName}
             </div>
-            {metrics.map((m, ci) => {
-              const val = dataMap[loc]?.[m.key];
+            {metrics.map((m) => {
+              const val = dataMap[locStr]?.[m.key];
               return (
                 <div
                   key={m.key}
                   style={{
-                    gridColumn: ci + 2,
-                    gridRow: ri + 1,
                     width: "80px",
                     height: "20px",
-                    backgroundColor: getColor(
-                      val,
-                      maxVals[m.key],
-                      m.channel
-                    ),
+                    backgroundColor: getColor(val, maxVals[m.key], m.channel),
                   }}
                   title={`${m.label}: ${
                     val == null || isNaN(val) ? "n/a" : val
@@ -174,11 +165,17 @@ const HeatmapPlot = () => {
                 />
               );
             })}
-          </React.Fragment>
-        ))}
-      </div>
+          </div>
+        );
+      })}
     </div>
   );
+};
+
+HeatmapPlot.propTypes = {
+  selectedRegion:    PropTypes.number,
+  setSelectedRegion: PropTypes.func.isRequired,
+  infocardMap:       PropTypes.instanceOf(Map).isRequired,
 };
 
 export default HeatmapPlot;

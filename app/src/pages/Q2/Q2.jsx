@@ -115,8 +115,11 @@ const Question2 = () => {
         </div>
 
         <div className={`${styles["grid-item"]} ${styles["table-container"]}`}>
-          <HeatmapPlot 
-          />
+        <HeatmapPlot
+          selectedRegion={selectedRegion}
+          setSelectedRegion={setSelectedRegion}
+          infocardMap={infocardMap}
+        />
         </div>
 
       </div>
