@@ -1,12 +1,12 @@
 library(dplyr)
 
-# Load data
-df <- read.csv("data/resources/mc1-report-data-processed.csv", stringsAsFactors = FALSE)
+# 1. Load data (make sure the path/filename matches yours)
+df <- read.csv("data/resources/mc1-report-data.csv", stringsAsFactors = FALSE)
 
-# Ensure datetime exists
-df$datetime <- as.POSIXct(paste(df$date, df$timestamp), format = "%Y-%m-%d %H:%M:%S")
+# 2. Parse datetime directly from the 'time' column
+df$datetime <- as.POSIXct(df$time, format = "%Y-%m-%d %H:%M:%S")
 
-# Calculate raw metrics per location
+# 3. Calculate raw metrics per location
 df_q2 <- df %>%
   group_by(location) %>%
   summarise(
@@ -14,16 +14,15 @@ df_q2 <- df %>%
     std_dev_buildings   = sd(buildings, na.rm = TRUE),
     missing_shake_pct   = sum(is.na(shake_intensity)) / n()
   ) %>%
-  # Normalize metrics to 0-1 scale
-  # Normalized report count is inverted → fewer reports = higher uncertainty
+  # 4. Normalize metrics to 0–1 scale
   mutate(
     normalized_report_count = 1 - (report_count - min(report_count)) / (max(report_count) - min(report_count)),
     normalized_std_dev      = (std_dev_buildings - min(std_dev_buildings, na.rm = TRUE)) /
                               (max(std_dev_buildings, na.rm = TRUE) - min(std_dev_buildings, na.rm = TRUE))
   ) %>%
-  # Replace any NaN from division by 0 with 0
+  # 5. Replace NaN with 0
   replace(is.na(.), 0) %>%
-  # Compute final uncertainty and reliability scores and levels
+  # 6. Compute uncertainty & reliability, and bucket data-quality
   mutate(
     uncertainty_score   = 0.3 * normalized_report_count +
                           0.5 * normalized_std_dev +
@@ -34,7 +33,6 @@ df_q2 <- df %>%
                             uncertainty_score <= 0.6 ~ "Moderate",
                             TRUE                     ~ "High"
                           ),
-    # 0 = Low quality, 1 = Moderate, 2 = High
     data_quality_range  = case_when(
                             missing_shake_pct > 0.5          | report_count < 200 ~ 0,
                             (missing_shake_pct > 0.1 &
@@ -45,7 +43,7 @@ df_q2 <- df %>%
                           )
   )
 
-# Save output
+# 7. Write your final CSV
 write.csv(df_q2,
-          "data/resources/Q2/uncertainty-scores-with-range.csv",
+          "app/public/data/resources/Q2/uncertainty-scores.csv",
           row.names = FALSE)
