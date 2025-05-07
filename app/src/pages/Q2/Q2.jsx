@@ -119,6 +119,7 @@ const Question2 = () => {
           selectedRegion={selectedRegion}
           setSelectedRegion={setSelectedRegion}
           infocardMap={infocardMap}
+          colorScale={colorScale}
         />
         </div>
 
