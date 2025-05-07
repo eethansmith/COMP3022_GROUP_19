@@ -36,20 +36,34 @@ const AREA_NAME = {
 const Question2 = () => {
 
   const [geoData, setGeoData] = useState(null);
-  const [scoresData, setScoresData]     = useState([]);
+  const [uncertaintyData, setUncertaintyData]     = useState([]);
+  const [reliablityData, setReliabilityData] = useState([]);
   const [scoresMap, setScoresMap] = useState(new Map());
   const [infocardMap, setInfocardMap] = useState(new Map());
   const [selectedRegion, setSelectedRegion] = useState(null);
+
+  const Colors = {
+    GREEN: "#63d12c",
+    RED: "#c93030"
+  }
 
   const colorScale = useMemo(
     () =>
       d3.scaleLinear()
         .domain([0, 10])
-        .range(["#63d12c", "#c93030"])
+        .range([Colors.GREEN, Colors.RED])
         .clamp(true),
-    []
+    [Colors.GREEN, Colors.RED]
   );
-  
+
+  const colorScaleReverse = useMemo(
+    () =>
+      d3.scaleLinear()
+        .domain([0, 10])
+        .range([Colors.RED, Colors.GREEN])
+        .clamp(true),
+    [Colors.GREEN, Colors.RED]
+  );
 
   useEffect(() => {
     //Set GeoJSON directly
@@ -58,7 +72,7 @@ const Question2 = () => {
     //Load Q2 Uncertainty Score CSV
     d3.csv(process.env.PUBLIC_URL + "/data/resources/Q2/uncertainty-scores.csv").then(data => {
 
-      const d = [];
+      const u = [], r = [];
       const map = new Map();
       const infoCardData = new Map();
       
@@ -69,28 +83,38 @@ const Question2 = () => {
         );
 
         const id = +row.location;
-        const score =  +(row.uncertainty_score) * 10;
+        const uncertainty =  +(row.uncertainty_score) * 10;
+        const reliability = +(row.reliability_score) * 10;
 
-        d.push({
+        u.push({
 
           id: id,
           name: feat?.properties?.Nbrhood ?? `#${row.location}`,
-          rating: score,
+          rating: uncertainty,
 
         });
 
-        map.set(id, score)
+        r.push({
+          id: id,
+          name: feat?.properties?.Nbrhood ?? `#${row.location}`,
+          rating: reliability
+        })
+
+        map.set(id, uncertainty)
 
         infoCardData.set(id, {
           id: id,
           report_count: +row.report_count,
           name: feat?.properties?.Nbrhood ?? `#${row.location}`,
           level: row.uncertainty_level,
-          score: +row.uncertainty_score
+          uncertainty,
+          reliability,
+          missing_perc: +row.missing_shake_pct
         })
       });
       
-      setScoresData(d)
+      setUncertaintyData(u)
+      setReliabilityData(r)
       setScoresMap(map);
       setInfocardMap(infoCardData);
     });
@@ -103,6 +127,10 @@ const Question2 = () => {
       <Header />
 
       <h1>Report Analytics Dashboard</h1>
+      <p>This section helps you evaluate the trustworthiness of damage reports across different regions by visualising uncertainty scores.
+Uncertainty scores are based on: variability in damage, missing shake data, and low report counts.
+Formula: 0.4 × StdDev + 0.3 × Missing% + 0.3 × (1 − Normalised Report Count)
+Regions are labelled as Low, Moderate, or High uncertainty.</p>
 
       <div className={styles["grid-container"]}>
 
@@ -126,6 +154,7 @@ const Question2 = () => {
             setSelectedRegion={setSelectedRegion}
             colorScale={colorScale}
             className="w-full h-[600px]"
+            title="Uncertainty Score"
           />
         </div>
 
@@ -137,13 +166,13 @@ const Question2 = () => {
         </div>
 
         <div className={`${styles["grid-item"]} ${styles["bar-chart-container"]}`}>
-        <h3>Regions by Uncertainty Scoring</h3>
+        <h3>Regions by Reliability Scoring</h3>
           <BarChart
-            data={scoresData}
+            data={reliablityData}
             scoresMap={scoresMap}
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
-            colorScale={colorScale}
+            colorScale={colorScaleReverse}
             className="mt-10"
           />
         </div>

@@ -97,6 +97,7 @@ export default function ServicesDashboard({
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
             colorScale={colorScale}
+            title="Shake Intensity"
           />
         </div>
 
