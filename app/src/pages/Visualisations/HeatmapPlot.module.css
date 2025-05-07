@@ -1,0 +1,58 @@
+/* D3Heatmap.module.css */
+.controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #ffffff;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  @media (min-width: 640px) {
+    .controls {
+      flex-direction: row;
+    }
+  }
+  
+  .metricSelector {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  @media (min-width: 640px) {
+    .metricSelector {
+      margin-bottom: 0;
+    }
+  }
+  
+  .label {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #2d3748;
+    margin-right: 0.75rem;
+  }
+  
+  .select {
+    padding: 0.5rem 1rem;
+    border: 1px solid #cbd5e0;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    color: #4a5568;
+    transition: box-shadow 0.2s ease-in-out;
+  }
+  
+  .select:hover,
+  .select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.6);
+  }
+  
+  .info {
+    font-size: 0.875rem;
+    color: #718096;
+  }
+  
