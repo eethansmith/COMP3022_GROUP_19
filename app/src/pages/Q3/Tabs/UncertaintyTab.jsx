@@ -26,7 +26,6 @@ export default function UncertaintyByDayTab({
                 <HeatmapPlot />
               </div>
               <div className={styles["grid-item"]}>
-                {/* Pass the geoJson as a prop */}
                 <TimelineMap geoJson={geoJson} />
               </div>
             </div>
