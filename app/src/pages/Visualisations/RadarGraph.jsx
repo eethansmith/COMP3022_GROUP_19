@@ -42,7 +42,7 @@ export default function RadarGraph({
 
   // Load radar data from CSV
   useEffect(() => {
-    d3.csv("/data/resources/radar-graphing.csv", d3.autoType)
+    d3.csv("/data/resources/Q1/radar-graphing.csv", d3.autoType)
       .then(data => {
         // Process the data to create radar chart data for each region
         const processedData = data.map(d => ({
