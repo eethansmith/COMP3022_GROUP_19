@@ -7,7 +7,12 @@ const CSV_PATH =
 const HeatmapPlot = () => {
   const [dataMap, setDataMap] = useState({});
   const [locations, setLocations] = useState([]);
-  const [maxVals, setMaxVals] = useState({ std: 0, missing: 0, reports: 0 });
+  const [maxVals, setMaxVals] = useState({
+    std: 0,
+    missing: 0,
+    reports: 0,
+    uncertainty: 0,
+  });
 
   useEffect(() => {
     fetch(CSV_PATH)
@@ -19,73 +24,77 @@ const HeatmapPlot = () => {
         const locSet = new Set();
         let maxStd = 0,
           maxMissing = 0,
-          maxReports = 0;
+          maxReports = 0,
+          maxUnc = 0;
 
         rows.forEach((row) => {
           const loc = row.location;
-          if (!loc) return; // skip blank lines or malformed
+          if (!loc) return;
 
-          // pull the real CSV columns:
           const std = parseFloat(row.std_dev_buildings);
           const missing = parseFloat(row.missing_shake_pct);
           const reports = parseInt(row.report_count, 10);
+          const uncertainty = parseFloat(row.uncertainty_score);
 
-          // track them
-          map[loc] = { std, missing, reports };
+          map[loc] = { std, missing, reports, uncertainty };
           locSet.add(loc);
 
           if (!isNaN(std) && std > maxStd) maxStd = std;
           if (!isNaN(missing) && missing > maxMissing) maxMissing = missing;
-          if (!isNaN(reports) && reports > maxReports)
-            maxReports = reports;
+          if (!isNaN(reports) && reports > maxReports) maxReports = reports;
+          if (!isNaN(uncertainty) && uncertainty > maxUnc) maxUnc = uncertainty;
         });
 
         setDataMap(map);
-        // sort numerically if possible
         setLocations(
           Array.from(locSet).sort((a, b) => {
             const na = Number(a),
               nb = Number(b);
-            if (!isNaN(na) && !isNaN(nb)) return na - nb;
-            return a.localeCompare(b);
+            return !isNaN(na) && !isNaN(nb)
+              ? na - nb
+              : a.localeCompare(b);
           })
         );
-        setMaxVals({ std: maxStd, missing: maxMissing, reports: maxReports });
+        setMaxVals({
+          std: maxStd,
+          missing: maxMissing,
+          reports: maxReports,
+          uncertainty: maxUnc,
+        });
       });
   }, []);
 
-  // A tiny CSV parser that strips outer quotes
+  // simple CSV parser that strips quotes
   const parseCSV = (text) => {
     const [headerLine, ...lines] = text.trim().split("\n");
     const headers = headerLine
       .split(",")
       .map((h) => h.replace(/^"|"$/g, ""));
-
     return lines.map((line) => {
       const cols = line.split(",");
       const obj = {};
       headers.forEach((h, i) => {
         let v = cols[i] ?? "";
-        // strip quotes off values too
-        v = v.replace(/^"|"$/g, "");
-        obj[h] = v;
+        obj[h] = v.replace(/^"|"$/g, "");
       });
       return obj;
     });
   };
 
-  // unified colour function
+  // unified colour function with 4 channels
   const getColor = (v, max, channel) => {
     if (v == null || isNaN(v) || max === 0) return "#eee";
     const norm = v / max;
     const c = Math.round(255 * (1 - norm));
     switch (channel) {
       case "blue":
-        return `rgb(${c},${c},255)`; // white→blue
+        return `rgb(${c},${c},255)`;    // white→blue
       case "magenta":
-        return `rgb(255,${c},255)`; // white→magenta
+        return `rgb(255,${c},255)`;    // white→magenta
       case "green":
-        return `rgb(${c},255,${c})`; // white→green
+        return `rgb(${c},255,${c})`;    // white→green
+      case "cyan":
+        return `rgb(${c},255,255)`;    // white→cyan
       default:
         return "#000";
     }
@@ -95,6 +104,7 @@ const HeatmapPlot = () => {
     { key: "std", label: "Std Dev", channel: "blue" },
     { key: "missing", label: "Missing Shake %", channel: "magenta" },
     { key: "reports", label: "Report Count", channel: "green" },
+    { key: "uncertainty", label: "Uncertainty", channel: "cyan" },
   ];
 
   return (
@@ -107,7 +117,7 @@ const HeatmapPlot = () => {
           marginBottom: 4,
         }}
       >
-        <div /> {/* empty top-left */}
+        <div />
         {metrics.map((m) => (
           <div
             key={m.key}
@@ -128,7 +138,6 @@ const HeatmapPlot = () => {
       >
         {locations.map((loc, ri) => (
           <React.Fragment key={loc}>
-            {/* location label */}
             <div
               style={{
                 gridColumn: 1,
@@ -143,8 +152,6 @@ const HeatmapPlot = () => {
             >
               {loc}
             </div>
-
-            {/* metric cells */}
             {metrics.map((m, ci) => {
               const val = dataMap[loc]?.[m.key];
               return (
