@@ -1,218 +1,175 @@
-import React, { useState, useEffect } from "react";
-import PropTypes from "prop-types";
+import React, { useRef, useEffect, useState } from 'react';
+import * as d3 from 'd3';
+import PropTypes from 'prop-types';
 
-// Adjust to wherever your CSV lives:
-const CSV_PATH =
-  process.env.PUBLIC_URL + "/data/resources/Q2/uncertainty-scores.csv";
-
-const HeatmapPlot = ({
-  selectedRegion,
-  setSelectedRegion,
-  infocardMap,
-  colorScale,
-}) => {
-  const [dataMap, setDataMap] = useState({});
-  const [locations, setLocations] = useState([]);
-  const [maxVals, setMaxVals] = useState({
-    std: 0,
-    missing: 0,
-    reports: 0,
-    uncertainty: 0,
-  });
-  const [hovered, setHovered] = useState(null);
+/**
+ * HeatmapPlot.jsx
+ * Renders a sortable heatmap of regions vs. metrics (std_dev, missing_report_pct, report_count, reliability_score).
+ * - Dynamic dimensions with a 15:10 aspect ratio
+ * - Clickable headers and row labels to sort ascending/descending or select region
+ * - Tooltip on hover
+ * - Highlight selected row with subtle overlay
+ */
+const HeatmapPlot = ({ infocardMap, selectedRegion, setSelectedRegion, colorScale }) => {
+  const svgRef = useRef();
+  const [sortConfig, setSortConfig] = useState({ key: 'std_dev', direction: 'asc' });
 
   useEffect(() => {
-    fetch(CSV_PATH)
-      .then((r) => r.text())
-      .then((text) => {
-        const rows = parseCSV(text);
-        const map = {};
-        const locSet = new Set();
-        let maxStd = 0,
-          maxMissing = 0,
-          maxReports = 0,
-          maxUnc = 0;
+    // Prepare data array
+    const data = Array.from(infocardMap.values()).map(region => ({
+      id: region.id,
+      name: region.name,
+      std_dev: region.std_dev,
+      missing_report_pct: region.missing_report_pct,
+      report_count: region.report_count,
+      reliability_score: region.reliability_score,
+      uncertainty_score: region.uncertainty_score
+    }));
 
-        rows.forEach((row) => {
-          const loc = row.location;
-          if (!loc) return;
-
-          const std = parseFloat(row.std_dev_buildings);
-          const missing = parseFloat(row.missing_shake_pct);
-          const reports = parseInt(row.report_count, 10);
-          const uncertainty = parseFloat(row.uncertainty_score);
-
-          map[loc] = { std, missing, reports, uncertainty };
-          locSet.add(loc);
-
-          if (!isNaN(std) && std > maxStd) maxStd = std;
-          if (!isNaN(missing) && missing > maxMissing) maxMissing = missing;
-          if (!isNaN(reports) && reports > maxReports) maxReports = reports;
-          if (!isNaN(uncertainty) && uncertainty > maxUnc) maxUnc = uncertainty;
-        });
-
-        setDataMap(map);
-        setLocations(
-          Array.from(locSet).sort((a, b) => {
-            const na = Number(a),
-              nb = Number(b);
-            return !isNaN(na) && !isNaN(nb)
-              ? na - nb
-              : a.localeCompare(b);
-          })
-        );
-        setMaxVals({ std: maxStd, missing: maxMissing, reports: maxReports, uncertainty: maxUnc });
-      });
-  }, []);
-
-  // Simple CSV parser that strips quotes
-  const parseCSV = (text) => {
-    const [headerLine, ...lines] = text.trim().split("\n");
-    const headers = headerLine
-      .split(",")
-      .map((h) => h.replace(/^"|"$/g, ""));
-    return lines.map((line) => {
-      const cols = line.split(",");
-      const obj = {};
-      headers.forEach((h, i) => {
-        let v = cols[i] ?? "";
-        obj[h] = v.replace(/^"|"$/g, "");
-      });
-      return obj;
+    // Sort
+    const sorted = [...data].sort((a, b) => {
+      const dir = sortConfig.direction === 'asc' ? 1 : -1;
+      return (a[sortConfig.key] - b[sortConfig.key]) * dir;
     });
-  };
 
-  // Define your metrics
-  const metrics = [
-    { key: "std", label: "Standard Deviation" },
-    { key: "missing", label: "Shake Intensity Missing" },
-    { key: "reports", label: "Amount of Reports" },
-    { key: "uncertainty", label: "Uncertainty Score" },
-  ];
+    // Metrics + labels
+    const metrics = [
+      { key: 'std_dev',             label: 'Std. Deviation',    display: (val) => (Math.round(val * 100) / 100) },
+      { key: 'missing_report_pct',  label: '% Reports Missing', display: (val) => `${Math.round(val * 100)}%` },
+      { key: 'report_count',        label: '# Reports',         display: (val) => val },
+      { key: 'uncertainty_score',   label: 'Reliability',       display: (val) => (Math.round((1 - val) * 100) / 100) }
+    ];
+    const keys = metrics.map(m => m.key);
+    const labelMap = metrics.reduce((acc, { key, label }) => { acc[key] = label; return acc; }, {});
+    const displayMap = metrics.reduce((acc, {key, display }) => { acc[key] = display; return acc }, {});
 
-  // Cell colour: grey ramp for most, custom colorScale for uncertainty
-    // Cell colour: grey ramp for most, custom colorScale for uncertainty
-  const getCellColor = (key, val) => {
-    if (val == null || isNaN(val)) return "#eee";
-    if (key === "uncertainty") {
-      // uncertainty_score originally 0–1; scale expects 0–10
-      return colorScale(val * 10);
-    }
-    const max = maxVals[key];
-    if (max === 0) return "#CED3D3";
-    const norm = val / max;
+    console.log(displayMap)
 
-    const interpolateHex = (startHex, endHex, t) => {
-      const s = parseInt(startHex.slice(1), 16);
-      const e = parseInt(endHex.slice(1), 16);
+    // Build color scales per metric
+    const colorScales = {};
+    metrics.forEach(({ key }) => {
+      const [min, max] = d3.extent(sorted, d => d[key]);
+      colorScales[key] = colorScale.copy().domain([min, max]);
+    });
 
-      const sr = (s >> 16) & 0xff,
-            sg = (s >> 8) & 0xff,
-            sb = s & 0xff;
+    // SVG & dimensions
+    const svg = d3.select(svgRef.current);
+    const container = svgRef.current.parentNode;
+    const { width } = container.getBoundingClientRect();
+    const height = (width * 10) / 15;
+    svg.attr('width', width).attr('height', height);
 
-      const er = (e >> 16) & 0xff,
-            eg = (e >> 8) & 0xff,
-            eb = e & 0xff;
+    const margin = { top: 60, right: 30, bottom: 50, left: 120 };
+    const innerW = width - margin.left - margin.right;
+    const innerH = height - margin.top - margin.bottom;
 
-      const r = Math.round(sr + (er - sr) * t);
-      const g = Math.round(sg + (eg - sg) * t);
-      const b = Math.round(sb + (eb - sb) * t);
+    svg.selectAll('*').remove();
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-      return `#${r.toString(16).padStart(2, '0')}${g
-        .toString(16)
-        .padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-    };
+    // Scales
+    const xScale = d3.scaleBand().domain(keys).range([0, innerW]).padding(0.1);
+    const yScale = d3.scaleBand().domain(sorted.map(d => d.name)).range([0, innerH]).padding(0.1);
 
-    return interpolateHex("#CED3D3", "#47586C", norm);
-  };
+    // Axes with lighter strokes
+    const xAxis = d3.axisTop(xScale)
+      .tickFormat(key => {
+        let lab = labelMap[key];
+        if (sortConfig.key === key) {
+          lab += sortConfig.direction === 'desc' ? ' ↑' : ' ↓';
+        }
+        return lab;
+      })
+      .tickSize(0);
+    const yAxis = d3.axisLeft(yScale).tickSize(0);
 
-  return (
-    <div style={{ width: "100%", overflowX: "auto", fontFamily: "sans-serif" }}>
-      {/* Header row */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: `150px repeat(${metrics.length}, 80px)`,
-          marginBottom: 8,
-        }}
-      >
-        <div />
-        {metrics.map((m) => (
-          <div
-            key={m.key}
-            style={{ textAlign: "center", fontSize: 12, fontWeight: 600 }}
-          >
-            {m.label}
-          </div>
-        ))}
-      </div>
+    // Render X axis
+    const xg = g.append('g').attr('class', 'axis x-axis').call(xAxis);
+    xg.selectAll('path, line').style('stroke', '#fff');
+    xg.selectAll('text')
+      .style('cursor', 'pointer')
+      .style('font-size', '14px')
+      .style('font-weight', (d) => d === sortConfig.key ? 'bold' : 'normal')
+      .on('click', (event, key) => {
+        let dir = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') dir = 'desc';
+        setSortConfig({ key, direction: dir });
+      });
 
-      {/* Rows */}
-      {locations.map((locStr) => {
-        const id = Number(locStr);
-        const regionName = infocardMap.get(id)?.name || locStr;
-        const isSel = id === selectedRegion;
-        const isHover = id === hovered;
+    // Render Y axis
+    const yg = g.append('g').attr('class', 'axis y-axis').call(yAxis);
+    yg.selectAll('path, line').style('stroke', '#fff');
+    yg.selectAll('text')
+      .style('cursor', 'pointer')
+      .style('font-size', '12px')
+      .style('font-weight', d => (sorted.find(item => item.name === d).id === selectedRegion ? 'bold' : 'normal'))
+      .on('click', (event, name) => {
+        const itm = sorted.find(item => item.name === name);
+        if (itm) setSelectedRegion(itm.id);
+      });
 
-        return (
-          <div
-            key={id}
-            onClick={() => setSelectedRegion(id)}
-            onMouseEnter={() => setHovered(id)}
-            onMouseLeave={() => setHovered(null)}
-            style={{
-              display: "grid",
-              gridTemplateColumns: `150px repeat(${metrics.length}, 80px)`,
-              backgroundColor: isSel
-                ? "rgba(100,150,255,0.2)"
-                : isHover
-                ? "rgba(200,200,200,0.1)"
-                : "transparent",
-              cursor: "pointer",
-            }}
-          >
-            <div
-              style={{
-                padding: "4px",
-                fontSize: 10,
-                fontWeight: isSel ? 600 : 400,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-              title={regionName}
-            >
-              {regionName}
-            </div>
+    // Tooltip
+    const tooltip = d3.select(container).append('div')
+      .attr('class', 'heatmap-tooltip')
+      .style('position', 'absolute')
+      .style('pointer-events', 'none')
+      .style('opacity', 0)
+      .style('background', '#fff')
+      .style('padding', '6px 8px')
+      .style('border', '1px solid #ddd')
+      .style('border-radius', '4px')
+      .style('font-size', '12px');
 
-            {metrics.map((m) => {
-              const val = dataMap[locStr]?.[m.key];
-              return (
-                <div
-                  key={m.key}
-                  style={{
-                    width: "80px",
-                    height: "20px",
-                    backgroundColor: getCellColor(m.key, val),
-                  }}
-                  title={`${m.label}: ${
-                    val == null || isNaN(val) ? "n/a" : val
-                  }`}
-                />
-              );
-            })}
-          </div>
-        );
-      })}
-    </div>
-  );
+    // Draw cells
+    g.selectAll('g.row').data(sorted).enter()
+      .append('g')
+      .attr('class', 'row')
+      .attr('transform', d => `translate(0,${yScale(d.name)})`)
+      .each(function(rowData) {
+        const row = d3.select(this);
+        // subtle highlight overlay for selected
+        if (rowData.id === selectedRegion) {
+          row.append('rect')
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('width', innerW)
+            .attr('height', yScale.bandwidth())
+            .attr('fill', 'rgba(132, 132, 132, 0.5)');
+        }
+        // cells
+        row.selectAll('rect.cell')
+          .data(keys.map(key => ({ key, value: rowData[key], id: rowData.id, name: rowData.name })))
+          .enter()
+          .append('rect')
+          .attr('class', 'cell')
+          .attr('x', d => xScale(d.key))
+          .attr('y', 0)
+          .attr('width', xScale.bandwidth())
+          .attr('height', yScale.bandwidth())
+          .attr('fill', d => colorScales[d.key](d.value))
+          .style('cursor', 'pointer')
+          .on('click', (event, d) => setSelectedRegion(d.id))
+          .on('mouseover', (event, d) => {
+            tooltip
+              .style('opacity', 1)
+              .html(`<strong>${d.name}</strong><br/>${labelMap[d.key]}: ${displayMap[d.key](d.value)}`)
+              .style('left', `${event.pageX + 10}px`)
+              .style('top', `${event.pageY + 10}px`);
+          })
+          .on('mouseout', () => tooltip.style('opacity', 0));
+      });
+
+    // Cleanup
+    return () => tooltip.remove();
+  }, [infocardMap, sortConfig, selectedRegion, setSelectedRegion, colorScale]);
+
+  return (<svg ref={svgRef} style={{ width: '100%', height: 'auto' }} />);
 };
 
 HeatmapPlot.propTypes = {
-  selectedRegion:    PropTypes.number,
+  infocardMap: PropTypes.instanceOf(Map).isRequired,
+  selectedRegion: PropTypes.number,
   setSelectedRegion: PropTypes.func.isRequired,
-  infocardMap:       PropTypes.instanceOf(Map).isRequired,
-  colorScale:        PropTypes.func.isRequired,
+  colorScale: PropTypes.func.isRequired,
 };
 
 export default HeatmapPlot;

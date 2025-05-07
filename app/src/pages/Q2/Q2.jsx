@@ -85,31 +85,41 @@ const Question2 = () => {
         const id = +row.location;
         const uncertainty =  +(row.uncertainty_score) * 10;
         const reliability = +(row.reliability_score) * 10;
+        const name = feat?.properties?.Nbrhood ?? `#${row.location}`
+
+        const std_dev = +row.normalized_std_dev;
+        const missingPct = +row.missing_shake_pct;
+        const report_count = +row.report_count;
+        const reliability_score = +row.reliability_score;
+        const uncertainty_score = +row.uncertainty_score;
 
         u.push({
 
           id: id,
-          name: feat?.properties?.Nbrhood ?? `#${row.location}`,
+          name,
           rating: uncertainty,
 
         });
 
         r.push({
           id: id,
-          name: feat?.properties?.Nbrhood ?? `#${row.location}`,
+          name,
           rating: reliability
         })
 
         map.set(id, uncertainty)
 
         infoCardData.set(id, {
-          id: id,
-          report_count: +row.report_count,
-          name: feat?.properties?.Nbrhood ?? `#${row.location}`,
+          id,
+          report_count,
+          name,
           level: row.uncertainty_level,
+          std_dev,
           uncertainty,
           reliability,
-          missing_perc: +row.missing_shake_pct
+          reliability_score,
+          uncertainty_score,
+          missing_report_pct: missingPct
         })
       });
       
