@@ -1,4 +1,4 @@
-"datetime","area","severity"
+"datetime","location","severity"
 2020-04-06,1,4.57
 2020-04-06 03:00:00,1,4.73
 2020-04-06 06:00:00,1,4.83

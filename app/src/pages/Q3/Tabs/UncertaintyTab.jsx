@@ -1,7 +1,6 @@
 import { useState } from "react";
 import styles from "./UncertaintyTab.module.css";
 import HeatmapPlot from "../../Visualisations/HeatmapPlot";
-import StatusOvertime from "../../Visualisations/StatusOvertime";
 import CandleSeverityCanvas from "../../Visualisations/CandleSeverity";
 import TimelineMap from "../../Visualisations/TimelineMap";
 

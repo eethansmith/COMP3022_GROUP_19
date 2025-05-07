@@ -1,56 +1,63 @@
-set.seed(123)         # reproducible bootstrap
-lambda    <- 5        # pseudo-count for shrinkage
-boot_iter <- 1000     # # of bootstrap replications
+set.seed(123)        # reproducible bootstrap
 
-df <- read.csv("data/resources/mc1-report-data-processed.csv", stringsAsFactors = FALSE)
+# Parameters
+lambda       <- 5      # shrinkage pseudo-count
+trim_frac    <- 0.1    # fraction trimmed for robust mean
+boot_iter    <- 1000   # number of bootstrap replications
+ci_level     <- 0.90   # confidence level for bootstrap CIs
+ci_lower_prob <- (1 - ci_level) / 2
+ci_upper_prob <- 1 - ci_lower_prob
 
+# 1) Read data
+df <- read.csv("data/resources/mc1-report-data.csv", stringsAsFactors = FALSE)
 
+# 2) Normalise metrics to [0,1]
 metrics10 <- c("sewer_and_water","power","roads_and_bridges","medical","buildings")
-
-for(m in metrics10) {
+for (m in metrics10) {
   df[[m]] <- df[[m]] / 10
 }
-
 df$shake_intensity <- df$shake_intensity / 9
 
+# 3) Compute global prior means
 all_metrics <- c(metrics10, "shake_intensity")
-global_mean <- sapply(all_metrics,
-                      function(m) mean(df[[m]], na.rm = TRUE))
+global_mean <- sapply(all_metrics, function(m) mean(df[[m]], na.rm = TRUE))
 
-metric_stats <- function(x, prior_mean, trim = 0.1) {
+# 4) Function to compute shrinkage score and bootstrap CI
+metric_stats <- function(x, prior_mean) {
   x <- x[!is.na(x)]
   n <- length(x)
-  if(n == 0) {
-    return(list(score = NA, n = 0, ci_low = NA, ci_high = NA))
+  if (n == 0) {
+    return(list(score = NA, n = 0,
+                ci_low = NA, ci_high = NA))
   }
-
-  tmean <- mean(x, trim = trim)
-
+  # trimmed mean
+  tmean <- mean(x, trim = trim_frac)
+  # shrinkage toward prior
   score <- (n / (n + lambda)) * tmean + (lambda / (n + lambda)) * prior_mean
-
-  if(n < 2) {
+  # bootstrap CI if enough data
+  if (n < 2) {
     ci <- c(NA, NA)
   } else {
     boots <- replicate(boot_iter, {
       samp <- sample(x, size = n, replace = TRUE)
-      mean(samp, trim = trim)
+      mean(samp, trim = trim_frac)
     })
-    ci <- quantile(boots, probs = c(0.05, 0.95))
+    ci <- quantile(boots, probs = c(ci_lower_prob, ci_upper_prob), na.rm = TRUE)
   }
   list(score = score, n = n,
        ci_low = ci[1], ci_high = ci[2])
 }
 
+# 5) Loop over areas and metrics
 areas <- sort(unique(df$location))
 out <- vector("list", length(areas))
 
-for(i in seq_along(areas)) {
+for (i in seq_along(areas)) {
   a <- areas[i]
   sub <- df[df$location == a, , drop = FALSE]
-  row <- list(area = a,
+  row <- list(location = a,
               total_reports = nrow(sub))
-
-  for(m in all_metrics) {
+  for (m in all_metrics) {
     stats <- metric_stats(sub[[m]], prior_mean = global_mean[m])
     row[[paste0(m, "_score")]]  <- stats$score
     row[[paste0(m, "_n")]]      <- stats$n
@@ -60,47 +67,12 @@ for(i in seq_along(areas)) {
   out[[i]] <- row
 }
 
-round_cols <- grep("(_score|_ci_low|_ci_high)$", names(out_df), value=TRUE)
+# 6) Build output data.frame and round
+out_df <- do.call(rbind, lapply(out, function(x) as.data.frame(x, stringsAsFactors = FALSE)))
+round_cols <- grep("(_score|_ci_low|_ci_high)$", names(out_df), value = TRUE)
 out_df[round_cols] <- lapply(out_df[round_cols], round, digits = 3)
 
+# 7) Write to CSV
 write.csv(out_df,
-          "app/public/data/resources/radar-graph-areas.csv",
+          "app/public/data/resources/radar-graphing.csv",
           row.names = FALSE)
-
-# ------------------------------------------------------------------------------
-# Equation explanation:
-#
-# 1.  Normalisation:
-#     - Metrics on a 0–10 scale are divided by 10; shake_intensity (0–9) is divided by 9.
-#       This maps all values into [0,1].
-#
-# 2.  Trimmed mean (tmean):
-#     - tmean = mean(x, trim = 0.1)
-#       i.e. the mean of the middle 80% of the sample, which reduces the impact of outliers.
-#
-# 3.  Empirical-Bayes shrinkage (“score”):
-#     - score = (n / (n + λ)) * tmean
-#             + (λ / (n + λ)) * global_mean
-#       • n          = number of non-missing reports in this area for the metric
-#       • λ (lambda) = pseudo-count (here, 5) representing how many “virtual” reports
-#                      we borrow from the global distribution
-#       • global_mean = the overall mean of that metric (after normalisation)
-#
-#     This formula “pulls” area estimates toward the global average when n is small,
-#     but relies almost entirely on the area’s data when n ≫ λ.
-#
-# 4.  Bootstrap confidence intervals (ci_low, ci_high):
-#     - We resample the area’s data with replacement boot_iter times, each time
-#       computing the 10% trimmed mean. The 5th and 95th percentiles of those
-#       bootstrapped trimmed means give a 90% CI for the underlying metric.
-#
-# Final output:
-#   For each area and each metric, we export:
-#     • <metric>_score     – shrunk, trimmed mean in [0,1]
-#     • <metric>_n         – count of reports used
-#     • <metric>_ci_low    – lower 5% bootstrap bound
-#     • <metric>_ci_high   – upper 95% bootstrap bound
-#   plus total_reports = total rows for that area.
-#
-#   Rounded to two decimals and ready for plotting on a radar chart.
-# ------------------------------------------------------------------------------
