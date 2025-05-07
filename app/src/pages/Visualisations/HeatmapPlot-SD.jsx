@@ -84,10 +84,10 @@ const HeatmapPlot = ({
 
   // Define your metrics
   const metrics = [
-    { key: "std", label: "Std Dev" },
-    { key: "missing", label: "Missing Shake %" },
-    { key: "reports", label: "Report Count" },
-    { key: "uncertainty", label: "Uncertainty" },
+    { key: "std", label: "Standard Deviation" },
+    { key: "missing", label: "Shake Intensity Missing" },
+    { key: "reports", label: "Amount of Reports" },
+    { key: "uncertainty", label: "Uncertainty Score" },
   ];
 
   // Cell colour: grey ramp for most, custom colorScale for uncertainty
