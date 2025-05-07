@@ -102,7 +102,7 @@ const Question2 = () => {
     <div className={styles.body}>
       <Header />
 
-      <h1>Report Data</h1>
+      <h1>Report Analytics Dashboard</h1>
 
       <div className={styles["grid-container"]}>
 

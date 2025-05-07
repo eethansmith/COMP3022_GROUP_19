@@ -44,7 +44,7 @@ const Question3 = () => {
             <Header />
 
             <div>
-                <h1>Change in Conditions over Period</h1>
+                <h1>Temporal Changes</h1>
                 <div className={styles.body}>
                     <div className={styles["grid-container"]}>
                         <div className={`${styles["grid-item"]} ${styles["candle-container"]}`}>

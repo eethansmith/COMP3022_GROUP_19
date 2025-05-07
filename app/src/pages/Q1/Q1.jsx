@@ -21,14 +21,7 @@ const services = [
       <div className={styles.body}>
         <Header />
   
-        <h3>
-          {/* "Emergency responders will base their initial response on the earthquake
-          shake map. Use visual analytics to determine how their response should
-          change based on damage reports from citizens on the ground. How would
-          you prioritise neighbourhoods for response? Which parts of the city are
-          hardest hit?" */}
-          Select Service:
-        </h3>
+        <h1>Emergency Responder Dashboard</h1>
   
         <div className={styles.tabs}>
           <Tabular tabs={tabs} />
