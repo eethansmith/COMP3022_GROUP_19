@@ -1,16 +1,9 @@
-####################################################################
-#  Multi-service earthquake-response priority scores   (base R)
-#  Generates: rescue-priority.csv, medical-priority.csv,
-#             utilities-priority.csv, traffic-priority.csv
-####################################################################
-
-### 1. Load data ----------------------------------------------------
+# Load data
 df <- read.csv(
-  "data/resources/mc1-report-data-processed.csv",
+  "data/resources/mc1-report-data.csv",
   stringsAsFactors = FALSE
 )
-
-### 2. Weight definitions ------------------------------------------
+# Weight definitions
 weight_sets <- list(
   rescue = c(
     buildings        = 0.70,
@@ -41,7 +34,7 @@ weight_sets <- list(
   )
 )
 
-### 3. Helper functions --------------------------------------------
+# Helper functions
 row_weighted_mean <- function(x, w_vec) {
   good <- !is.na(x)
   if (!any(good)) return(NA_real_)
@@ -50,7 +43,7 @@ row_weighted_mean <- function(x, w_vec) {
 
 calc_priority <- function(df_in, w) {
 
-  # 3a – per-report severity ---------------------------------------
+  # per-report severity 
   needed  <- names(w)
   missing <- setdiff(needed, names(df_in))
   if (length(missing))
@@ -58,7 +51,7 @@ calc_priority <- function(df_in, w) {
 
   sev <- apply(df_in[ needed ], 1, row_weighted_mean, w_vec = w)
 
-  # 4 – aggregate by location --------------------------------------
+  # aggregate by location
   agg <- aggregate(
     sev ~ location,
     data = data.frame(location = df_in$location, sev = sev),
@@ -77,14 +70,14 @@ calc_priority <- function(df_in, w) {
     row.names = NULL
   )
 
-  # 5 – empirical-Bayes shrinkage ----------------------------------
+  # empirical-Bayes shrinkage
   mu_global <- mean(sev, na.rm = TRUE)
   m         <- median(loc$n)
 
   loc$adjusted <- (loc$n / (loc$n + m)) * loc$mean_sev +
                   (m     / (loc$n + m)) * mu_global
 
-  # 6 – rescale 0-to-10 & round ------------------------------------
+  # rescale 0-to-10 & round 
   rng <- range(loc$adjusted)
   loc$rating <- round(
     10 * (loc$adjusted - rng[1]) / diff(rng),
@@ -94,7 +87,7 @@ calc_priority <- function(df_in, w) {
   loc[ order(-loc$rating), ]
 }
 
-### 4. Run for each service & save ---------------------------------
+# Run for each service & save
 out_dir <- "app/public/data/resources"
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 

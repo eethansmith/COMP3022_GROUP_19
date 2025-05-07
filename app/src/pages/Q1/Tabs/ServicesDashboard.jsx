@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import * as d3 from "d3";
 
-import SplitRow   from "../../../components/SplitRow";
 import LineChart  from "../../Visualisations/LineChart";
 import ShakeMap   from "../../Visualisations/ShakeMap";
 import RadarGraph from "../../Visualisations/RadarGraph";
@@ -56,21 +55,42 @@ export default function ServicesDashboard({
       .catch(console.error);
   }, [priorityCsv]);
 
+  const selectedRegionData = scoresData.find((data, index) => data.id === selectedRegion);
+
   /* ------------------------------ UI ------------------------------ */
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.header}>
+    <div className={styles["wrapper"]}>
+      <div className={styles["header"]}>
         {blurb.map((txt, i) => <p key={i}>{txt}</p>)}
       </div>
 
-      <main className={styles.content}>
-        <SplitRow leftWidth="50%" rightWidth="50%" height="70%">
+      <h2
+        className={`${styles["region-title"]} ${
+          selectedRegionData ? styles["region-selected"] : styles["region-prompt"]
+        }`}
+      >
+        {selectedRegionData ? (
+          <><span className={styles["region-name"]}>{selectedRegionData.name}</span></>
+        ) : (
+          <>⚠️ <span className={styles["select-prompt"]}>SELECT A REGION FOR MORE INFORMATION</span></>
+        )}
+      </h2>
+
+
+      <div className={styles["grid-container"]}>
+
+        <div className={`${styles["grid-item"]} ${styles["line-chart-container"]}`}>
+          <h2>Seismic Activity Over Time</h2>
           <LineChart
             dataUrl={timelineCsv}
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
             colorScale={colorScale}
           />
+        </div>
+
+        <div className={`${styles["grid-item"]} ${styles["shake-map-container"]}`}>
+          <h2>St. Himark Region Map</h2>
           <ShakeMap
             data={geoJson}
             scoresMap={scoresMap}
@@ -78,23 +98,29 @@ export default function ServicesDashboard({
             setSelectedRegion={setSelectedRegion}
             colorScale={colorScale}
           />
-        </SplitRow>
+        </div>
 
-        <SplitRow leftWidth="60%" rightWidth="40%" height="25%">
+        <div className={`${styles["grid-item"]} ${styles["radar-graph-container"]}`}>
+          <h2>Infrastructure Damages by Region</h2>
           <RadarGraph
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
             scoresMap={scoresMap}
             colorScale={colorScale}
           />
+        </div>
+
+        <div className={`${styles["grid-item"]} ${styles["bar-chart-container"]}`}>
+          <h2>Regions by Shake Intensity</h2>
           <BarChart
             data={scoresData}
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
             colorScale={colorScale}
           />
-        </SplitRow>
-      </main>
+        </div>
+
+      </div>
     </div>
   );
 }
