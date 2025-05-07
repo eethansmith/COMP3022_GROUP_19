@@ -5,7 +5,7 @@
 
 ---
 
-## Project Overview 🌍
+## Project Overview
 
 The **St. Himarks Quake Responders Dashboard** is an interactive web application designed to assist emergency response teams in assessing and prioritizing neighborhoods on the island of St. Himark following seismic events. The dashboard integrates citizen damage reports with seismic shake data to provide:
 
