@@ -8,6 +8,7 @@ import geoDataJson from "../../assets/geojson/StHimark.geo.json";
 import InfoCard from "../Visualisations/InfoCard.jsx";
 import ShakeMap from "../Visualisations/ShakeMap.jsx";
 import BarChart from "../Visualisations/BarChart.jsx";
+import HeatmapPlot from "../Visualisations/HeatmapPlot-SD.jsx";
 
 const Question2 = () => {
 
@@ -83,6 +84,7 @@ const Question2 = () => {
       <div className={styles["grid-container"]}>
 
         <div className={`${styles["grid-item"]} ${styles["bar-chart-container"]}`}>
+        <h2>Regions by Uncertainty Scoring</h2>
           <BarChart
             data={scoresData}
             scoresMap={scoresMap}
@@ -94,6 +96,7 @@ const Question2 = () => {
         </div>
 
         <div className={`${styles["grid-item"]} ${styles["shake-map-container"]}`}>
+        <h2>St. Himark Region Map</h2>
           <ShakeMap
             data={geoData}
             scoresMap={scoresMap}
@@ -108,6 +111,11 @@ const Question2 = () => {
           <InfoCard 
             data={infocardMap}
             selectedRegion={selectedRegion}
+          />
+        </div>
+
+        <div className={`${styles["grid-item"]} ${styles["table-container"]}`}>
+          <HeatmapPlot 
           />
         </div>
 
