@@ -187,7 +187,6 @@ export default function CandleSeverityCanvas({ height = 450, currentIdx, setCurr
     const maxVol = Math.max(...data.map(d => d.volume));
     
     // Apply a log scale to volume to enhance visibility of smaller values
-    const logBase = 1.5;
     const volScale = v => Math.log(v + 1) / Math.log(maxVol + 1); // Normalized log scale
     
     const yScale = v =>

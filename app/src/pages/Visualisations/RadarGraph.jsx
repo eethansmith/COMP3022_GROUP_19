@@ -42,7 +42,7 @@ export default function RadarGraph({
 
   // Load radar data from CSV
   useEffect(() => {
-    d3.csv("/data/resources/radar-graphing.csv", d3.autoType)
+    d3.csv("/data/resources/Q1/radar-graphing.csv", d3.autoType)
       .then(data => {
         // Process the data to create radar chart data for each region
         const processedData = data.map(d => ({
@@ -186,14 +186,6 @@ export default function RadarGraph({
         };
       });
       
-      // Create polygon path
-      const radarLine = d3.lineRadial()
-        .radius(d => d.value)
-        .angle((d, i) => i * angleSlice)
-        .curve(d3.curveLinearClosed);
-        
-      const pathData = points.map(p => [p.x, p.y]).flat();
-      
       // Draw the radar polygon
       group.append("path")
         .datum(points)
@@ -268,7 +260,6 @@ export default function RadarGraph({
     }
     
     // Create grid of small radar charts
-    const padding = 10;
     const cellWidth = gridWidth / gridColumns;
     const cellHeight = (gridHeight - 100) / gridRows; // Reserve space for header and footer
     
