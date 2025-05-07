@@ -31,7 +31,7 @@ export default function LineChart({
       const sev = row.severity?.trim();
       return {
         datetime: parseDate(row.datetime.trim()),
-        area: +row.area, // ← numeric!
+        area: +row.location, 
         severity: sev === "" || sev === "NA" ? null : +sev,
       };
     })

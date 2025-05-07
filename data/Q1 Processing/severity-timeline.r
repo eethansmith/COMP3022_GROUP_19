@@ -1,19 +1,19 @@
-# ---------- parameters --------------------------------------------------------
-infile   <- "data/resources/mc1-report-data-processed.csv"      # raw input
+# Parameters
+infile   <- "data/resources/mc1-report-data.csv"     
 outfile  <- "app/public/data/resources/rescue-service-timeline.csv"
 tz_data  <- "UTC"
 
-# ---------- 1. load -----------------------------------------------------------
+# Load
 raw <- read.csv(infile, stringsAsFactors = FALSE)
 
-# ---------- 2. unify datetime -------------------------------------------------
+# Unify datetime
 raw$datetime <- as.POSIXct(
   paste(raw$date, raw$timestamp),
   tz = tz_data
 )
 
-# ---------- 3. keep only needed columns --------------------------------------
-w <- c(                         # <- NEW weights
+# Keeping only needed columns
+w <- c(                    
   buildings          = 0.70,
   medical            = 0.10,
   roads_and_bridges  = 0.05,
@@ -27,10 +27,9 @@ missing_cols <- setdiff(needed, names(raw))
 if (length(missing_cols))
   stop("Input is missing columns: ", paste(missing_cols, collapse = ", "))
 
-data <- raw[ , needed ]
-names(data)[1] <- "area"   # friendlier name
+data <- raw[ , needed ]  
 
-# ---------- 4. simple median imputation per area-day --------------------------
+# Simple median imputation per area-day
 data$day <- as.Date(data$datetime, tz = tz_data)
 
 for (col in key_cols) {
@@ -48,7 +47,7 @@ for (col in key_cols) {
   }
 }
 
-# ---------- 5. per-report severity (weighted mean) ----------------------------
+# Per-report severity (weighted mean)
 row_weighted_mean <- function(x, w_vec) {
   good <- !is.na(x)
   if (!any(good)) return(NA_real_)
@@ -62,21 +61,21 @@ data$severity <- apply(
   w_vec = w
 )
 
-# ---------- 6. bucket timestamps to 3-hour slots ------------------------------
+# Bucket Timestamps to 3-hour slots
 bucket_seconds <- 3 * 3600
 data$bucket <- as.POSIXct(
   floor(as.numeric(data$datetime) / bucket_seconds) * bucket_seconds,
   origin = "1970-01-01", tz = tz_data
 )
 
-# ---------- 7. mean & count per area-slot -------------------------------------
+# Mean & Count per area-slot 
 agg <- aggregate(
   list(severity = data$severity, n = rep(1, nrow(data))),
   by   = list(area = data$area, datetime = data$bucket),
   FUN  = function(x) if (identical(x, rep(1, length(x)))) length(x) else mean(x)
 )
 
-# ---------- 8. full grid of area × time ---------------------------------------
+# Full grid of area × time
 areas <- sort(unique(data$area))
 grid_times <- seq(
   from = min(data$bucket),
@@ -94,28 +93,25 @@ timeline <- merge(grid, agg, by = c("area", "datetime"), all.x = TRUE)
 timeline$n[         is.na(timeline$n)        ] <- 0      # 0 reports
 timeline$severity[  is.na(timeline$severity) ] <- NA     # still NA for now
 
-# ---------- 9. empirical-Bayes shrinkage per slot -----------------------------
+# Empirical-Bayes shrinkage per slot 
 # smoothing constant = median report count across non-empty slots
 m <- median(agg$n)
 
 # pre-compute global mean severity for each time slot (across all areas)
 slot_mean <- tapply(agg$severity, agg$datetime, mean, na.rm = TRUE)
 
-# shrink!
 timeline$global_mean <- slot_mean[ as.character(timeline$datetime) ]
 
-# where ALL areas had NA (unlikely) fall back to overall mean
 overall_mean <- mean(agg$severity, na.rm = TRUE)
 timeline$global_mean[ is.na(timeline$global_mean) ] <- overall_mean
 
-# replace NA severity with global mean to keep formula numeric
-sev_no_na <- ifelse(is.na(timeline$severity), timeline$global_mean,
-                                         timeline$severity)
+# Replace NA severity with global mean keeping formula numeric
+sev_no_na <- ifelse(is.na(timeline$severity), timeline$global_mean,timeline$severity)
 
 timeline$severity <- (timeline$n / (timeline$n + m)) * sev_no_na +
-                     (m           / (timeline$n + m)) * timeline$global_mean
+(m           / (timeline$n + m)) * timeline$global_mean
 
-# ---------- 10. optional small-gap smoothing (≤2 empty slots) -----------------
+# Optional small-gap smoothing (≤2 empty slots)
 fill_short_na <- function(v, maxgap = 2) {
   nas <- is.na(v)
   if (all(!nas)) return(v)
@@ -139,7 +135,7 @@ row.names(timeline) <- NULL
 # round to 2 dp for clarity
 timeline$severity <- round(timeline$severity, 2)
 
-# ---------- 11. export --------------------------------------------------------
+# Export
 write.csv(
   timeline[ , c("datetime", "area", "severity")],
   outfile,

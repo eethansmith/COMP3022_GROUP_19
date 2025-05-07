@@ -167,7 +167,7 @@ const ShakeMap = ({
       .attr("font-size", "12px")
       .attr("font-weight", "bold")
       .attr("fill", "#495057")
-      .text("Intensity Scale");
+      .text("");
   
     legend.append("defs")
       .append("linearGradient")

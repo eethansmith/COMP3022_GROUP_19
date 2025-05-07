@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
 import PropTypes from "prop-types";
 
-const AREA_NAME = {
+const LOCATION_NAME = {
     1 : "Palace Hills",
     2 : "Northwest",
     3 : "Old Town",
@@ -42,11 +42,11 @@ export default function RadarGraph({
 
   // Load radar data from CSV
   useEffect(() => {
-    d3.csv("/data/resources/radar-graph-areas.csv", d3.autoType)
+    d3.csv("/data/resources/radar-graphing.csv", d3.autoType)
       .then(data => {
         // Process the data to create radar chart data for each region
         const processedData = data.map(d => ({
-          area: +d.area,
+          location: +d.location,
           metrics: [
             { axis: "Sewer & Water", value: d.sewer_and_water_score },
             { axis: "Power", value: d.power_score },
@@ -82,7 +82,7 @@ export default function RadarGraph({
     const smallChartSize = Math.min(width / (gridColumns * 2), (height - headerFooterHeight) / gridRows) * 0.8;
     const largeChartSize = Math.min(width * 0.3, height * 0.5);
     
-    // Grid area dimensions (left side)
+    // Grid location dimensions (left side)
     const gridWidth = width * 0.45;
     const gridHeight = height;
     
@@ -205,10 +205,10 @@ export default function RadarGraph({
           path += " Z";
           return path;
         })
-        .style("fill", colorScale(data.area === selectedRegion ? 8 : 3))
+        .style("fill", colorScale(data.location === selectedRegion ? 8 : 3))
         .style("fill-opacity", 0.5)
-        .style("stroke", colorScale(data.area === selectedRegion ? 9 : 5))
-        .style("stroke-width", data.area === selectedRegion ? 2 : 1);
+        .style("stroke", colorScale(data.location === selectedRegion ? 9 : 5))
+        .style("stroke-width", data.location === selectedRegion ? 2 : 1);
         
       // Add vertices for detailed view
       if (detailed) {
@@ -232,15 +232,15 @@ export default function RadarGraph({
         });
       }
       
-      // Add area ID below small charts
+      // Add location ID below small charts
       if (!detailed) {
         group.append("text")
           .attr("x", centerX)
           .attr("y", size + 5)
           .attr("text-anchor", "middle")
           .attr("font-size", "12px")
-          .style("font-weight", data.area === selectedRegion ? "bold" : "normal")
-          .text(AREA_NAME[data.area]);
+          .style("font-weight", data.location === selectedRegion ? "bold" : "normal")
+          .text(LOCATION_NAME[data.location]);
       }
       
       // Create a transparent overlay for click events on small charts
@@ -252,7 +252,7 @@ export default function RadarGraph({
           .style("fill", "transparent")
           .style("cursor", "pointer")
           .on("click", () => {
-            setSelectedRegion(data.area);
+            setSelectedRegion(data.location);
           })
           .on("mouseover", function() {
             d3.select(this.parentNode).select("path")
@@ -261,21 +261,10 @@ export default function RadarGraph({
           })
           .on("mouseout", function() {
             d3.select(this.parentNode).select("path")
-              .style("stroke-width", data.area === selectedRegion ? 2 : 1)
+              .style("stroke-width", data.location === selectedRegion ? 2 : 1)
               .style("fill-opacity", 0.5);
           });
       }
-      
-      // Add title for detailed chart
-    //   if (detailed) {
-    //     group.append("text")
-    //       .attr("x", centerX)
-    //       .attr("y", -50)
-    //       .attr("text-anchor", "middle")
-    //       .attr("font-size", "18px")
-    //       .attr("font-weight", "bold")
-    //       .text(`${AREA_NAME[data.area]} Details`);
-    //   }
     }
     
     // Create grid of small radar charts
@@ -297,7 +286,7 @@ export default function RadarGraph({
     });
     
     // Create detailed radar chart for selected region
-    const selectedData = radarData.find(d => d.area === selectedRegion);
+    const selectedData = radarData.find(d => d.location === selectedRegion);
     if (selectedData) {
       const detailedX = width * 0.6;
       const detailedY = (height - largeChartSize) / 2;
