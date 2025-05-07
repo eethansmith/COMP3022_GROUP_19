@@ -33,7 +33,7 @@ export default function makeServiceTab(slug) {
     traffic:   ["#F7F4FF", "#5D32B3"]  // very pale lilac → purple
   };
 
-  const stem = `/data/resources/${slug}`;
+  const stem = `/data/resources/Q1/${slug}`;
 
   return (
     <ServicesDashboard
