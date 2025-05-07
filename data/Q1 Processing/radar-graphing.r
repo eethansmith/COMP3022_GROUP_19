@@ -8,17 +8,17 @@ ci_level     <- 0.90   # confidence level for bootstrap CIs
 ci_lower_prob <- (1 - ci_level) / 2
 ci_upper_prob <- 1 - ci_lower_prob
 
-# 1) Read data
+# Read data
 df <- read.csv("data/resources/mc1-report-data.csv", stringsAsFactors = FALSE)
 
-# 2) Normalise metrics to [0,1]
+# Normalise metrics to [0,1]
 metrics10 <- c("sewer_and_water","power","roads_and_bridges","medical","buildings")
 for (m in metrics10) {
   df[[m]] <- df[[m]] / 10
 }
 df$shake_intensity <- df$shake_intensity / 9
 
-# 3) Compute global prior means
+# Compute global prior means
 all_metrics <- c(metrics10, "shake_intensity")
 global_mean <- sapply(all_metrics, function(m) mean(df[[m]], na.rm = TRUE))
 
@@ -48,7 +48,7 @@ metric_stats <- function(x, prior_mean) {
        ci_low = ci[1], ci_high = ci[2])
 }
 
-# 5) Loop over areas and metrics
+# Loop over areas and metrics
 areas <- sort(unique(df$location))
 out <- vector("list", length(areas))
 
@@ -67,12 +67,12 @@ for (i in seq_along(areas)) {
   out[[i]] <- row
 }
 
-# 6) Build output data.frame and round
+# Build output data.frame and round
 out_df <- do.call(rbind, lapply(out, function(x) as.data.frame(x, stringsAsFactors = FALSE)))
 round_cols <- grep("(_score|_ci_low|_ci_high)$", names(out_df), value = TRUE)
 out_df[round_cols] <- lapply(out_df[round_cols], round, digits = 3)
 
-# 7) Write to CSV
+# Write to CSV
 write.csv(out_df,
           "app/public/data/resources/radar-graphing.csv",
           row.names = FALSE)
