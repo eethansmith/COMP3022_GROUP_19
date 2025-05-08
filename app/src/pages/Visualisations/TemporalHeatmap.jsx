@@ -48,32 +48,45 @@ export default function TemporalHeatmap({ currentIdx, setCurrentIdx }) {
     return lines.map(line => {
       const cols = line.split(',');
       return headers.reduce((obj, h, i) => {
-        obj[h] = cols[i];
+        obj[h.replace(/^"|"$/g, "")] = cols[i];
         return obj;
       }, {});
     });
   };
 
   // Convert strings to numbers and map names
-  const processData = (rawData) =>
-    rawData.map(d => ({
-      location: d.location,
-      name: AREA_NAME[d.location],
-      time_bin: d.time_bin,
-      n_reports: +d.n_reports,
-      composite_severity: +d.composite_severity,
-      missing_rate: +d.missing_rate,
-      local_uncertainty: +d.local_uncertainty
-    }));
+  const processData = (rawData) => {
 
-  const formatDate = (date) => {
+    console.log("Raw", rawData)
+
+    const proc = rawData.map(d => {
+      
+      console.log(d)
+
+      return ({
+        location: +d.location,
+        name: AREA_NAME[d.location],
+        time_bin: d.time_bin.replace(/^"|"$/g, ""),
+        n_reports: +d.n_reports,
+        composite_severity: +d.composite_severity,
+        missing_rate: +d.missing_rate,
+        local_uncertainty: +d.local_uncertainty
+      })
+    })
+  
+    console.log("Processed", proc);
+
+    return proc;
+  };
+
+  const formatDate = (date, short = false) => {
     date = new Date(date);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0'); // getMonth() returns 0-11, so add 1
     const day = String(date.getDate()).padStart(2, '0');
     const hour = String(date.getHours()).padStart(2, '0');
 
-    return `${year}/${month}/${day} @ ${hour}:00`;
+    return short ? `${hour}:00, ${day}/${month}` : `${year} ${month} ${day} @ ${hour}:00`;
   }
 
   // Fetch and parse CSV on mount
@@ -83,7 +96,9 @@ export default function TemporalHeatmap({ currentIdx, setCurrentIdx }) {
         const resp = await fetch(CSV_PATH);
         if (!resp.ok) throw new Error(`Failed to load data: ${resp.status}`);
         const text = await resp.text();
-        setData(processData(parseCSV(text)));
+        const processed = processData(parseCSV(text));
+        console.log(processed)
+        setData(processed);
       } catch (e) {
         setError(e.message);
       }
@@ -174,7 +189,7 @@ export default function TemporalHeatmap({ currentIdx, setCurrentIdx }) {
       .style('text-anchor', 'start')
       .style('font-size', '11px')
       .style('fill', '#4a5568')
-      .text(d => d.slice(11, 16));
+      .text(d => formatDate(d, true));
 
     // Y labels
     g.append('g')

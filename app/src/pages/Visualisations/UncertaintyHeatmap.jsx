@@ -43,8 +43,6 @@ const UncertaintyHeatmap = ({ infocardMap, selectedRegion, setSelectedRegion, co
     const labelMap = metrics.reduce((acc, { key, label }) => { acc[key] = label; return acc; }, {});
     const displayMap = metrics.reduce((acc, {key, display }) => { acc[key] = display; return acc }, {});
 
-    console.log(displayMap)
-
     // Build color scales per metric
     const colorScales = {};
     metrics.forEach(({ key }) => {
