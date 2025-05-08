@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
  * - Tooltip on hover
  * - Highlight selected row with subtle overlay
  */
-const HeatmapPlot = ({ infocardMap, selectedRegion, setSelectedRegion, colorScale }) => {
+const UncertaintyHeatmap = ({ infocardMap, selectedRegion, setSelectedRegion, colorScale }) => {
   const svgRef = useRef();
   const [sortConfig, setSortConfig] = useState({ key: 'std_dev', direction: 'asc' });
 
@@ -165,11 +165,11 @@ const HeatmapPlot = ({ infocardMap, selectedRegion, setSelectedRegion, colorScal
   return (<svg ref={svgRef} style={{ width: '100%', height: 'auto' }} />);
 };
 
-HeatmapPlot.propTypes = {
+UncertaintyHeatmap.propTypes = {
   infocardMap: PropTypes.instanceOf(Map).isRequired,
   selectedRegion: PropTypes.number,
   setSelectedRegion: PropTypes.func.isRequired,
   colorScale: PropTypes.func.isRequired,
 };
 
-export default HeatmapPlot;
+export default UncertaintyHeatmap;

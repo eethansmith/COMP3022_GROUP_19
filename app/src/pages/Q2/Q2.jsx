@@ -8,7 +8,7 @@ import geoDataJson from "../../assets/geojson/StHimark.geo.json";
 import InfoCard from "../Visualisations/InfoCard.jsx";
 import ShakeMap from "../Visualisations/ShakeMap.jsx";
 import BarChart from "../Visualisations/BarChart.jsx";
-import HeatmapPlot from "../Visualisations/HeatmapPlot-SD.jsx";
+import UncertaintyHeatmap from "../Visualisations/UncertaintyHeatmap.jsx";
 
 const AREA_NAME = {
   1: "Palace Hills",
@@ -147,7 +147,7 @@ Regions are labelled as Low, Moderate, or High uncertainty.</p>
 
         <div className={`${styles["grid-item"]} ${styles["heatmap-container"]}`}>
           <h3>Breakdown by Region</h3>
-          <HeatmapPlot
+          <UncertaintyHeatmap
             selectedRegion={selectedRegion}
             setSelectedRegion={setSelectedRegion}
             infocardMap={infocardMap}

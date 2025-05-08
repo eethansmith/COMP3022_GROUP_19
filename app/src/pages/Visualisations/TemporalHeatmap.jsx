@@ -1,7 +1,7 @@
 // D3Heatmap.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import styles from './HeatmapPlot.module.css';
+import styles from './TemporalHeatmap.module.css';
 
 const CSV_PATH = process.env.PUBLIC_URL + "/data/resources/Q3/location-time-matrix.csv";
 const AREA_NAME = {
@@ -26,7 +26,7 @@ const AREA_NAME = {
  19: "West Parton"
 };
 
-export default function D3Heatmap({ currentIdx, setCurrentIdx }) {
+export default function TemporalHeatmap({ currentIdx, setCurrentIdx }) {
   const containerRef = useRef();
   const svgRef = useRef();
   const tooltipRef = useRef();
@@ -65,6 +65,16 @@ export default function D3Heatmap({ currentIdx, setCurrentIdx }) {
       missing_rate: +d.missing_rate,
       local_uncertainty: +d.local_uncertainty
     }));
+
+  const formatDate = (date) => {
+    date = new Date(date);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // getMonth() returns 0-11, so add 1
+    const day = String(date.getDate()).padStart(2, '0');
+    const hour = String(date.getHours()).padStart(2, '0');
+
+    return `${year}/${month}/${day} @ ${hour}:00`;
+  }
 
   // Fetch and parse CSV on mount
   useEffect(() => {
@@ -200,7 +210,7 @@ export default function D3Heatmap({ currentIdx, setCurrentIdx }) {
             ${d.name}
           </div>
           <div style="display:grid;grid-template-columns:auto auto;gap:6px;font-size:13px;">
-            <span style="color:#4a5568">Time:</span><span style="font-weight:500">${d.time_bin.slice(11,16)}</span>
+            <span style="color:#4a5568">Time:</span><span style="font-weight:500">${formatDate(d.time_bin)}</span>
             <span style="color:#4a5568">Reports:</span><span style="font-weight:500">${d.n_reports}</span>
             <span style="color:#4a5568">Severity:</span><span style="font-weight:500">${d.composite_severity.toFixed(2)}</span>
             <span style="color:#4a5568">Missing:</span><span style="font-weight:500">${(d.missing_rate*100).toFixed(1)}%</span>
