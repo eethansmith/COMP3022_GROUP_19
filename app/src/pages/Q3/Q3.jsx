@@ -1,6 +1,6 @@
 import Header from "../../components/Header";
 import CandleSeverityCanvas from "../Visualisations/CandleSeverity";
-import HeatmapPlot from "../Visualisations/HeatmapPlot";
+import TemporalHeatmap from "../Visualisations/TemporalHeatmap";
 import TimelineMap from "../Visualisations/TimelineMap";
 import styles from "./Q3.module.css";
 import { useEffect, useState } from "react";
@@ -54,7 +54,7 @@ const Question3 = () => {
 
                         <div className={`${styles["grid-item"]} ${styles["heatmap-container"]}`}>
                             <h3>Temporal trends by Region</h3>
-                            <HeatmapPlot currentIdx={currentIdx} setCurrentIdx={setCurrentIdx}/>
+                            <TemporalHeatmap currentIdx={currentIdx} setCurrentIdx={setCurrentIdx}/>
                         </div>
 
                         <div className={`${styles["grid-item"]} ${styles["slider-container"]}`}>

@@ -1,7 +1,7 @@
 // D3Heatmap.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import styles from './HeatmapPlot.module.css';
+import styles from './TemporalHeatmap.module.css';
 
 const CSV_PATH = process.env.PUBLIC_URL + "/data/resources/Q3/location-time-matrix.csv";
 const AREA_NAME = {
@@ -26,7 +26,7 @@ const AREA_NAME = {
  19: "West Parton"
 };
 
-export default function D3Heatmap({ currentIdx, setCurrentIdx }) {
+export default function TemporalHeatmap({ currentIdx, setCurrentIdx }) {
   const containerRef = useRef();
   const svgRef = useRef();
   const tooltipRef = useRef();
