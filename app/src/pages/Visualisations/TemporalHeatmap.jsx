@@ -185,7 +185,7 @@ export default function TemporalHeatmap({ currentIdx, setCurrentIdx }) {
       .append('text')
       .attr('x', d => xScale(d) + xScale.bandwidth() / 2)
       .attr('y', -10)
-      .attr('transform', d => `rotate(-45,${xScale(d) + xScale.bandwidth()/2},-10)`)    
+      .attr('transform', d => `rotate(-25,${xScale(d) + xScale.bandwidth()/2},-10)`)    
       .style('text-anchor', 'start')
       .style('font-size', '11px')
       .style('fill', '#4a5568')
