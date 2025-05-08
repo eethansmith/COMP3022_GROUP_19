@@ -1,5 +1,5 @@
 import Header from "../../components/Header";
-import CandleSeverityCanvas from "../Visualisations/CandleSeverity";
+import CandleSeverityCanvas from "../Visualisations/CandlestickChart";
 import TemporalHeatmap from "../Visualisations/TemporalHeatmap";
 import TimelineMap from "../Visualisations/TimelineMap";
 import styles from "./Q3.module.css";

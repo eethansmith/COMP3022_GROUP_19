@@ -66,6 +66,16 @@ export default function TemporalHeatmap({ currentIdx, setCurrentIdx }) {
       local_uncertainty: +d.local_uncertainty
     }));
 
+  const formatDate = (date) => {
+    date = new Date(date);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // getMonth() returns 0-11, so add 1
+    const day = String(date.getDate()).padStart(2, '0');
+    const hour = String(date.getHours()).padStart(2, '0');
+
+    return `${year}/${month}/${day} @ ${hour}:00`;
+  }
+
   // Fetch and parse CSV on mount
   useEffect(() => {
     (async () => {
@@ -200,7 +210,7 @@ export default function TemporalHeatmap({ currentIdx, setCurrentIdx }) {
             ${d.name}
           </div>
           <div style="display:grid;grid-template-columns:auto auto;gap:6px;font-size:13px;">
-            <span style="color:#4a5568">Time:</span><span style="font-weight:500">${d.time_bin.slice(11,16)}</span>
+            <span style="color:#4a5568">Time:</span><span style="font-weight:500">${formatDate(d.time_bin)}</span>
             <span style="color:#4a5568">Reports:</span><span style="font-weight:500">${d.n_reports}</span>
             <span style="color:#4a5568">Severity:</span><span style="font-weight:500">${d.composite_severity.toFixed(2)}</span>
             <span style="color:#4a5568">Missing:</span><span style="font-weight:500">${(d.missing_rate*100).toFixed(1)}%</span>
