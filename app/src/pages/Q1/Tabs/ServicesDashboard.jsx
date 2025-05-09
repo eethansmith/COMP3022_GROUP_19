@@ -112,7 +112,7 @@ export default function ServicesDashboard({
         </div>
 
         <div className={`${styles["grid-item"]} ${styles["bar-chart-container"]}`}>
-          <h2>Regions by Shake Intensity</h2>
+          <h2>Regions by Priority</h2>
           <BarChart
             data={scoresData}
             selectedRegion={selectedRegion}
