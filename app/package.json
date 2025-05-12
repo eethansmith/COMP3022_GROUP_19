@@ -1,7 +1,7 @@
 {
   "name": "app-clean",
   "version": "0.1.0",
-  "homepage": "https://github.com/JcbSm/COMP3022_GROUP_19.git",
+  "homepage": "https://JcbSm.github.io/COMP3022_GROUP_19",
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
