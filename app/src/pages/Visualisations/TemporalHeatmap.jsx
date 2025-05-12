@@ -1,7 +1,7 @@
 // D3Heatmap.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import styles from './HeatmapPlot.module.css';
+import styles from './TemporalHeatmap.module.css';
 
 const CSV_PATH = process.env.PUBLIC_URL + "/data/resources/Q3/location-time-matrix.csv";
 const AREA_NAME = {
@@ -26,7 +26,7 @@ const AREA_NAME = {
  19: "West Parton"
 };
 
-export default function D3Heatmap({ currentIdx, setCurrentIdx }) {
+export default function TemporalHeatmap({ currentIdx, setCurrentIdx }) {
   const containerRef = useRef();
   const svgRef = useRef();
   const tooltipRef = useRef();
@@ -48,23 +48,46 @@ export default function D3Heatmap({ currentIdx, setCurrentIdx }) {
     return lines.map(line => {
       const cols = line.split(',');
       return headers.reduce((obj, h, i) => {
-        obj[h] = cols[i];
+        obj[h.replace(/^"|"$/g, "")] = cols[i];
         return obj;
       }, {});
     });
   };
 
   // Convert strings to numbers and map names
-  const processData = (rawData) =>
-    rawData.map(d => ({
-      location: d.location,
-      name: AREA_NAME[d.location],
-      time_bin: d.time_bin,
-      n_reports: +d.n_reports,
-      composite_severity: +d.composite_severity,
-      missing_rate: +d.missing_rate,
-      local_uncertainty: +d.local_uncertainty
-    }));
+  const processData = (rawData) => {
+
+    console.log("Raw", rawData)
+
+    const proc = rawData.map(d => {
+      
+      console.log(d)
+
+      return ({
+        location: +d.location,
+        name: AREA_NAME[d.location],
+        time_bin: d.time_bin.replace(/^"|"$/g, ""),
+        n_reports: +d.n_reports,
+        composite_severity: +d.composite_severity,
+        missing_rate: +d.missing_rate,
+        local_uncertainty: +d.local_uncertainty
+      })
+    })
+  
+    console.log("Processed", proc);
+
+    return proc;
+  };
+
+  const formatDate = (date, short = false) => {
+    date = new Date(date);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // getMonth() returns 0-11, so add 1
+    const day = String(date.getDate()).padStart(2, '0');
+    const hour = String(date.getHours()).padStart(2, '0');
+
+    return short ? `${hour}:00, ${day}/${month}` : `${year} ${month} ${day} @ ${hour}:00`;
+  }
 
   // Fetch and parse CSV on mount
   useEffect(() => {
@@ -73,7 +96,9 @@ export default function D3Heatmap({ currentIdx, setCurrentIdx }) {
         const resp = await fetch(CSV_PATH);
         if (!resp.ok) throw new Error(`Failed to load data: ${resp.status}`);
         const text = await resp.text();
-        setData(processData(parseCSV(text)));
+        const processed = processData(parseCSV(text));
+        console.log(processed)
+        setData(processed);
       } catch (e) {
         setError(e.message);
       }
@@ -160,11 +185,11 @@ export default function D3Heatmap({ currentIdx, setCurrentIdx }) {
       .append('text')
       .attr('x', d => xScale(d) + xScale.bandwidth() / 2)
       .attr('y', -10)
-      .attr('transform', d => `rotate(-45,${xScale(d) + xScale.bandwidth()/2},-10)`)    
+      .attr('transform', d => `rotate(-25,${xScale(d) + xScale.bandwidth()/2},-10)`)    
       .style('text-anchor', 'start')
       .style('font-size', '11px')
       .style('fill', '#4a5568')
-      .text(d => d.slice(11, 16));
+      .text(d => formatDate(d, true));
 
     // Y labels
     g.append('g')
@@ -200,7 +225,7 @@ export default function D3Heatmap({ currentIdx, setCurrentIdx }) {
             ${d.name}
           </div>
           <div style="display:grid;grid-template-columns:auto auto;gap:6px;font-size:13px;">
-            <span style="color:#4a5568">Time:</span><span style="font-weight:500">${d.time_bin.slice(11,16)}</span>
+            <span style="color:#4a5568">Time:</span><span style="font-weight:500">${formatDate(d.time_bin)}</span>
             <span style="color:#4a5568">Reports:</span><span style="font-weight:500">${d.n_reports}</span>
             <span style="color:#4a5568">Severity:</span><span style="font-weight:500">${d.composite_severity.toFixed(2)}</span>
             <span style="color:#4a5568">Missing:</span><span style="font-weight:500">${(d.missing_rate*100).toFixed(1)}%</span>

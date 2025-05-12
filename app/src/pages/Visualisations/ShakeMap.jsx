@@ -9,6 +9,7 @@ const ShakeMap = ({
   setSelectedRegion,
   colorScale,
   className,
+  title = "",
   ...props
 }) => {
   const svgRef = useRef(null);
@@ -122,8 +123,10 @@ const ShakeMap = ({
         if (selected) {
           overlay.append("path")
             .attr("d", path(selected))
+            .attr("class", "selected-outline")
             .attr("fill", "none")
             .attr("stroke", "#212529")
+            .attr('stroke-opacity', 0.9)
             .attr("stroke-width", 3)
             .attr("stroke-dasharray", "none")
             .attr("stroke-linejoin", "round");
@@ -167,7 +170,7 @@ const ShakeMap = ({
       .attr("font-size", "12px")
       .attr("font-weight", "bold")
       .attr("fill", "#495057")
-      .text("");
+      .text(title);
   
     legend.append("defs")
       .append("linearGradient")
@@ -234,6 +237,27 @@ const ShakeMap = ({
         .attr("fill", "#212529")
         .text(selectedScore.toFixed(1));
     }
+
+    // pulse the opacity between .3 and .8
+    function pulse() {
+      d3.selectAll('.selected-outline')
+        .transition()
+        .duration(750)
+        .attr('stroke-opacity', 0.3)
+        .attr("stroke-width", 8)
+        .transition()
+        .duration(750)
+        .attr('stroke-opacity', 0.9)
+        .attr("stroke-width", 2)
+        .on('end', pulse);
+    }
+
+    // after initial draw
+    if (selectedRegion != null) {
+      pulse();
+    }
+
+
   }, [data, scoresMap, selectedRegion, scale]);
   
   return (

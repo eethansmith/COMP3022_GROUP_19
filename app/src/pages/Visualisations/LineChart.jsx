@@ -319,60 +319,62 @@ export default function LineChart({
     /* Add tooltip for hover effects */
     if (hoveredSeries !== null) {
       const hoveredData = seriesData.find(d => d.area === hoveredSeries);
-      
+
       if (hoveredData) {
         const lastPoint = hoveredData.values
           .filter(d => d.severity != null)
           .sort((a, b) => b.datetime - a.datetime)[0];
-          
+
         if (lastPoint) {
-          const tooltipX = x(lastPoint.datetime);
-          const tooltipY = y(lastPoint.severity);
-          
-          g.selectAll("g.tooltip")
+          const tooltipX = x(lastPoint.datetime) + 10;
+          const tooltipY = y(lastPoint.severity) - 10;
+          const padding = 6;
+
+          // bind a single tooltip group
+          const tooltipG = g.selectAll("g.tooltip")
             .data([lastPoint])
             .join("g")
-            .attr("class", "tooltip")
-            .attr("transform", `translate(${tooltipX + 10},${tooltipY - 10})`)
-            .call(g => {
-              g.selectAll("rect")
-                .data([null])
-                .join("rect")
-                .attr("x", -5)
-                .attr("y", -20)
-                .attr("width", 80)
-                .attr("height", 30)
-                .attr("fill", "#333")
-                .attr("opacity", 0.8)
-                .attr("rx", 3)
-                .attr("ry", 3);
-                
-              g.selectAll("text.tooltip-text")
-                .data([null])
-                .join("text")
-                .attr("class", "tooltip-text")
-                .attr("fill", "#fff")
-                .attr("text-anchor", "start")
-                .attr("font-size", "11px")
-                .attr("font-weight", "bold")
-                .attr("dy", "-0.5em")
-                .text(`Region: ${hoveredSeries}`);
-                
-              g.selectAll("text.tooltip-value")
-                .data([null])
-                .join("text")
-                .attr("class", "tooltip-value")
-                .attr("fill", "#fff")
-                .attr("text-anchor", "start")
-                .attr("font-size", "11px")
-                .attr("dy", "1em")
-                .text(`Severity: ${lastPoint.severity.toFixed(2)}`);
-            });
+              .attr("class", "tooltip")
+              .attr("transform", `translate(${tooltipX},${tooltipY})`);
+
+          // clear previous contents
+          tooltipG.selectAll("*").remove();
+
+          // draw the two text lines
+          const regionText = tooltipG.append("text")
+            .attr("class", "tooltip-text")
+            .attr("fill", "#fff")
+            .attr("font-size", "11px")
+            .attr("font-weight", "bold")
+            .attr("dy", "0.6em")
+            .text(`Region: ${hoveredSeries}`);
+
+          const valueText = tooltipG.append("text")
+            .attr("class", "tooltip-value")
+            .attr("fill", "#fff")
+            .attr("font-size", "11px")
+            .attr("dy", "1.8em")
+            .text(`Severity: ${lastPoint.severity.toFixed(2)}`);
+
+          // measure the group’s bounding box now that text is in place
+          const { width: textW, height: textH } = tooltipG.node().getBBox();
+
+          // insert the background rect behind the text
+          tooltipG.insert("rect", "text")
+            .attr("x", -padding)
+            .attr("y", -padding)
+            .attr("width", textW + padding * 2)
+            .attr("height", textH + padding * 2)
+            .attr("fill", "#333")
+            .attr("opacity", 0.8)
+            .attr("rx", 3)
+            .attr("ry", 3);
         }
       }
     } else {
       g.selectAll("g.tooltip").remove();
     }
+
 
   }, [data, width, selectedRegion, setSelectedRegion, aspectRatio, hoveredSeries, colorScale]);
 

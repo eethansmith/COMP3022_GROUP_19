@@ -30,22 +30,27 @@ export default function InfoCard({
         <h2 style={styles.title}>{region.name}</h2>
         <table style={styles.table}>
           <tbody>
+
             <tr>
               <td style={styles.label}>ID:</td>
-              <td>{region.id}</td>
+              <td style={styles.value}>{region.id}</td>
             </tr>
+
             <tr>
-              <td style={styles.label}>Level:</td>
-              <td style={{ color: levelColor, fontWeight: "bold" }}>{region.level}</td>
+              <td style={styles.label}># of Reports:</td>
+              <td style={styles.value}>{Math.round(region.report_count)}</td>
             </tr>
+
             <tr>
-              <td style={styles.label}>Score:</td>
-              <td>{Math.round(region.score * 100)} / 100</td>
+              <td style={styles.label}>Uncertainty Level:</td>
+              <td style={{ ...styles.value, color: levelColor, fontWeight: "bold" }}>{region.level}</td>
+            </tr>
+
+            <tr>
+              <td style={styles.label}>Reliability / Uncertainty</td>
+              <td style={styles.value}>{Math.round(region.reliability * 10)} / {Math.round(region.uncertainty * 10)}</td>
             </tr>            
-            <tr>
-              <td style={styles.label}>Reports:</td>
-              <td>{Math.round(region.report_count)}</td>
-            </tr>
+
           </tbody>
         </table>
       </div>
@@ -71,8 +76,8 @@ const styles = {
     padding: "2rem 3rem",
     borderRadius: "1rem",
     boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
-    minWidth: "320px",
-    maxWidth: "500px",
+    minWidth: "60%",
+    width: "auto",
     textAlign: "center",
     fontSize: "1.2rem",
     fontFamily: "Segoe UI, sans-serif",
@@ -91,7 +96,13 @@ const styles = {
     paddingRight: "1rem",
     textAlign: "left",
     color: "#555",
-    width: "40%",
+    width: "80%",
+    borderBottom: "1px dotted #aaa",  // ← adds the dotted line between the two <td>s
+  },
+  value: {
+    borderBottom: "1px dotted #aaa",
+    paddingLeft: "1rem",
+    textAlign: "right"
   },
   message: {
     fontSize: "1.5rem",

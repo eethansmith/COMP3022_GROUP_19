@@ -7,7 +7,7 @@ const Header = () => {
         <div className={styles["header"]}>
             <NavButton dest={"/Q1"}>🦺 Emergency Services</NavButton>
             <NavButton dest={"/Q2"}>📈 Report Analytics</NavButton>
-            <NavButton dest={"/Q3"}>⌚ Temporal Data</NavButton>
+            <NavButton dest={"/Q3"}>⌚ Temporal Analysis</NavButton>
         </div>
     );
 
