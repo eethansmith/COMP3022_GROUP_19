@@ -4,7 +4,7 @@
 
 **Group 19:** Abdul, Ethan, Jacob, Nithya
 
-**Link to GitHub Pages:** https://eethansmith.github.io/COMP3022_GROUP_19/#/Q1
+**Link to GitHub Pages:** https://eethansmith.github.io/COMP3022_GROUP_19/
 
 ---
 
